@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vstupenka — Velká Vánoční jízda 2026</title>
+<meta name="description" content="Vstupenka pro tým do Velké Vánoční jízdy 2026 v Kroměříži. Kartou nebo QR převodem, odkaz do hry přijde e-mailem.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link rel="stylesheet" href="/styl.css">
+</head>
+<body class="page">
+<header class="top">
+  <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
+  <nav><a href="/tym">Můj tým</a><a href="/zebricek">Žebříček</a></nav>
+</header>
+
+<main>
+  <div class="kicker">VELKÁ VÁNOČNÍ JÍZDA 2026</div>
+  <h2 class="zlata">Vstupenka pro tým</h2>
+
+  <!-- před otevřením registrace -->
+  <section id="zavreno" class="skryt">
+    <p class="lead">Registrace se otevírá <b style="color:var(--gold)">27. listopadu 2026</b>. Do té doby si připrav tým a vyber jméno.</p>
+    <div class="odpocet" id="odpocet"></div>
+    <p class="stred"><a class="btn sec" href="/">Zpět na hlavní stránku</a></p>
+  </section>
+
+  <!-- formulář -->
+  <section id="formular" class="skryt">
+    <p class="lead">Jedna vstupenka za <b style="color:var(--gold)">300 Kč</b> platí pro celý tým a všechny čtyři kapitoly. Po zaplacení přijde e-mail s odkazem do hry, kde tým pojmenuješ.</p>
+    <div id="zruseno" class="alert info skryt" style="margin-bottom:16px">Platba se nedokončila. Můžeš to zkusit znovu, nebo zvolit převod.</div>
+    <form class="card form" id="f" novalidate>
+      <div class="pole">
+        <label for="email">E-MAIL</label>
+        <input type="email" id="email" name="email" required autocomplete="email" inputmode="email" placeholder="na tenhle e-mail přijde odkaz do hry">
+      </div>
+      <div class="pole">
+        <label>PLATBA</label>
+        <div class="volby">
+          <label class="volba"><input type="radio" name="platba" value="stripe" checked><b>Kartou online</b><span>Karta, Apple Pay, Google Pay. Odkaz do hry přijde hned po zaplacení.</span></label>
+          <label class="volba"><input type="radio" name="platba" value="prevod"><b>Převodem (QR)</b><span>Zobrazíme QR kód a údaje. Odkaz přijde po připsání platby, obvykle do 1 pracovního dne.</span></label>
+        </div>
+      </div>
+      <div class="pole">
+        <label for="zdroj">JAK SES O HŘE DOZVĚDĚL/A? <span style="color:#a99cc7;letter-spacing:0;font-family:'Cormorant Garamond',serif;font-size:15px">(nepovinné)</span></label>
+        <select id="zdroj" name="zdroj">
+          <option value="">— vyber —</option>
+          <option>Facebook / Instagram</option>
+          <option>Od známých</option>
+          <option>Plakát ve městě</option>
+          <option>Škola / družina</option>
+          <option>Čajovna Na Radosti</option>
+          <option>Oáza Adamanthea</option>
+          <option>Jinak</option>
+        </select>
+      </div>
+      <label class="souhlas"><input type="checkbox" id="souhlas" required><span>Souhlasím s <a href="/pravidla" target="_blank">pravidly hry a zpracováním e-mailu</a> pro účely hry.</span></label>
+      <div id="chyba" class="alert chyba skryt"></div>
+      <button class="btn plna" type="submit" id="odeslat">Pokračovat k platbě</button>
+    </form>
+  </section>
+
+  <!-- převod: QR a údaje -->
+  <section id="prevod" class="skryt">
+    <div class="card">
+      <p class="stred" style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:.06em">Vstupenka je založená</p>
+      <p class="stred">Zaplať <b style="color:var(--gold)">300 Kč</b> převodem. Jakmile platba dorazí, přijde ti e-mail s odkazem do hry. Stejné údaje máš teď i v e-mailu.</p>
+      <img class="qr" id="qr" alt="QR platba">
+      <table class="tab">
+        <tr><td>Částka</td><td><b>300 Kč</b></td></tr>
+        <tr><td>Variabilní symbol</td><td><b id="p-vs"></b></td></tr>
+        <tr><td>Číslo účtu</td><td id="p-ucet"></td></tr>
+        <tr><td>IBAN</td><td id="p-iban" style="word-break:break-all"></td></tr>
+        <tr><td>Příjemce</td><td id="p-prijemce"></td></tr>
+        <tr><td>Zpráva</td><td id="p-zprava"></td></tr>
+      </table>
+      <div class="mezera"></div>
+      <p class="stred"><a class="btn sec" id="p-odkaz" href="#">Sledovat stav platby</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Kroměříž · <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
+  <div class="odkazy"><a href="/pravidla">Pravidla hry</a><a href="/odkaz">Zapomenutý odkaz</a></div>
+</footer>
+
+<script src="/web.js"></script>
+<script>
+(function(){
+  const q = new URLSearchParams(location.search);
+  const beta = q.get('beta') || '';
+  const zav = document.getElementById('zavreno'), form = document.getElementById('formular');
+
+  if (OMG.registraceOtevrena() || beta) form.classList.remove('skryt');
+  else { zav.classList.remove('skryt'); OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, () => { zav.classList.add('skryt'); form.classList.remove('skryt'); }); }
+  if (q.get('zruseno')) document.getElementById('zruseno').classList.remove('skryt');
+
+  const f = document.getElementById('f'), btn = document.getElementById('odeslat'), chyba = document.getElementById('chyba');
+  const ukazChybu = (t) => { chyba.textContent = t; chyba.classList.toggle('skryt', !t); };
+
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault(); ukazChybu('');
+    const email = f.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return ukazChybu('Zadej platný e-mail, tam ti přijde odkaz do hry.');
+    if (!f.souhlas.checked) return ukazChybu('Potvrď prosím souhlas s pravidly hry.');
+    btn.disabled = true; btn.textContent = 'Chviličku…';
+    try {
+      const d = await OMG.api('/api/vstupenka', { email, platba: f.platba.value, zdroj: f.zdroj.value, souhlas: true, beta });
+      if (d.url) { location.href = d.url; return; }
+      document.getElementById('qr').src = d.qr;
+      document.getElementById('p-vs').textContent = d.vs;
+      document.getElementById('p-ucet').textContent = d.ucet.ucet;
+      document.getElementById('p-iban').textContent = d.ucet.iban;
+      document.getElementById('p-prijemce').textContent = d.ucet.prijemce;
+      document.getElementById('p-zprava').textContent = d.ucet.zprava;
+      document.getElementById('p-odkaz').href = '/tym?k=' + d.token;
+      form.classList.add('skryt'); document.getElementById('prevod').classList.remove('skryt');
+      window.scrollTo(0, 0);
+    } catch (err) {
+      ukazChybu(err.message);
+      btn.disabled = false; btn.textContent = 'Pokračovat k platbě';
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Žebříček — Velká Vánoční jízda 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link rel="stylesheet" href="/styl.css">
+</head>
+<body class="page">
+<header class="top">
+  <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
+  <nav><a href="/vstupenka">Vstupenka</a><a href="/tym">Můj tým</a></nav>
+</header>
+
+<main>
+  <div class="kicker">VELKÁ VÁNOČNÍ JÍZDA 2026</div>
+  <h2 class="zlata">Žebříček</h2>
+  <p class="lead" id="pocet">Kdo zapálí nejvíc světla?</p>
+  <div class="card" id="obsah"><p class="stred">Načítám…</p></div>
+  <p class="stred" style="margin-top:18px;font-size:16px;color:#a99cc7">Pořadí podle bodů, při rovnosti rozhoduje dřívější čas. Vítěze vyhlásíme 24. 12. v 10:00.</p>
+</main>
+
+<footer>
+  <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Kroměříž · <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
+</footer>
+
+<script src="/web.js"></script>
+<script>
+OMG.api('/api/zebricek').then(d => {
+  const o = document.getElementById('obsah');
+  document.getElementById('pocet').textContent = d.pocet_tymu ? `Ve hře je ${d.pocet_tymu} ${d.pocet_tymu === 1 ? 'tým' : (d.pocet_tymu < 5 ? 'týmy' : 'týmů')}.` : 'Žebříček se rozsvítí s první kapitolou 29. 11.';
+  if (!d.tymy.length) { o.innerHTML = '<p class="stred">Papavilon zatím čeká na první odvážlivce.</p>'; return; }
+  o.innerHTML = `<table class="zeb"><thead><tr><th>#</th><th>Tým</th><th>Světla</th><th>Body</th></tr></thead><tbody>` +
+    d.tymy.map((t, i) => `<tr><td>${i + 1}.</td><td>${OMG.esc(t.nazev_tymu)}</td><td>${t.vyreseno}</td><td>${t.body}</td></tr>`).join('') + '</tbody></table>';
+}).catch(e => { document.getElementById('obsah').innerHTML = `<p class="stred">${OMG.esc(e.message)}</p>`; });
+</script>
+</body>
+</html>

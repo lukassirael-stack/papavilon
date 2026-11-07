@@ -1,0 +1,14 @@
+{
+  "name": "outdoor-magic-games",
+  "version": "1.0.0",
+  "description": "Outdoor Magic Games — Velká Vánoční jízda 2026: web, vstupenky, registrace týmů a hra",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "stripe": "^17.0.0"
+  }
+}

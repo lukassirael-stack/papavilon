@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Správa — Velká Vánoční jízda</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link rel="stylesheet" href="/styl.css">
+<style>
+.page main{max-width:1100px}
+.taby{display:flex;gap:8px;justify-content:center;margin:0 0 20px;flex-wrap:wrap}
+.taby button{padding:9px 18px;border-radius:999px;border:1px solid rgba(246,198,106,.4);background:rgba(30,24,84,.5);color:var(--ink);font-family:inherit;font-size:17px;font-weight:700;cursor:pointer}
+.taby button.akt{background:linear-gradient(180deg,#6a2fb0,#3b1878);border-color:var(--gold);color:#ffe7a6}
+.cisla{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.cisla div{padding:12px;border-radius:12px;background:rgba(30,24,84,.5);border:1px solid rgba(246,198,106,.25);text-align:center}
+.cisla b{display:block;font-family:'Cinzel',serif;font-size:26px;color:var(--gold)}
+.cisla span{font-size:14px;color:#cdbfa6;text-transform:uppercase;letter-spacing:.06em}
+.filtry{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.filtry button{padding:6px 12px;border-radius:999px;border:1px solid rgba(246,198,106,.35);background:transparent;color:var(--ink);font-family:inherit;font-size:15px;cursor:pointer}
+.filtry button.akt{background:rgba(90,40,170,.5);border-color:var(--gold)}
+.filtry input{padding:7px 12px;border-radius:999px;border:1px solid rgba(246,198,106,.35);background:rgba(10,12,50,.7);color:var(--ink);font-family:inherit;font-size:16px;min-width:180px}
+.tymy{display:grid;gap:10px}
+.tym{padding:14px 16px;border-radius:14px;border:1px solid rgba(246,198,106,.25);background:rgba(20,18,64,.55);display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:start}
+.tym .hl{font-size:18px}.tym .hl b{color:var(--gold)}
+.tym .det{font-size:15px;color:#cdbfa6;line-height:1.5}
+.tym .akce{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.tym .akce button,.tym .akce a{font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid rgba(246,198,106,.4);background:rgba(30,24,84,.6);color:var(--ink);font-family:inherit;cursor:pointer;text-align:center;white-space:nowrap}
+.tym .akce button.hlavni{background:linear-gradient(180deg,#6a2fb0,#3b1878);border-color:var(--gold);color:#ffe7a6}
+.st{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;letter-spacing:.04em}
+.st.ceka{background:rgba(255,179,107,.2);color:var(--warn)}.st.zap{background:rgba(126,224,160,.2);color:var(--ok)}.st.zrus{background:rgba(255,120,140,.2);color:#ffb0b0}
+@media (max-width:560px){.tym{grid-template-columns:1fr}.tym .akce{flex-direction:row;flex-wrap:wrap}}
+.kapitola{margin-bottom:18px;border-radius:16px;border:1px solid rgba(246,198,106,.3);background:rgba(20,18,64,.5);padding:16px}
+.kapitola h3{font-family:'Cinzel',serif;color:var(--gold);font-size:17px;letter-spacing:.06em;margin-bottom:10px}
+.mriz{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mriz .cely{grid-column:1/-1}
+@media (max-width:640px){.mriz{grid-template-columns:1fr}}
+.pole input,.pole textarea,.pole select{font-size:16px;padding:9px 11px}
+.pole>label{font-size:11px}
+.svetlo-ed{margin-top:12px;padding:14px;border-radius:12px;border:1px solid rgba(246,198,106,.2);background:rgba(10,12,50,.5)}
+.svetlo-ed summary{cursor:pointer;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.svetlo-ed summary::-webkit-details-marker{display:none}
+.svetlo-ed summary b{color:var(--gold)}
+.svetlo-ed .form{margin-top:12px}
+.radek-btn{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:12px 20px;border-radius:999px;background:#2a1650;border:1px solid var(--gold);color:#ffe7a6;font-size:16px;z-index:9;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.ukaz{opacity:1}
+</style>
+</head>
+<body class="page">
+<header class="top">
+  <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
+  <nav><a href="/tym">Můj tým</a><a href="/zebricek">Žebříček</a><a href="#" id="odhlasit">Odhlásit</a></nav>
+</header>
+
+<main>
+  <div class="kicker">SPRÁVA HRY</div>
+  <h2 class="zlata">Velká Vánoční jízda</h2>
+
+  <section id="prihlaseni" class="skryt">
+    <form class="card form" id="f-klic" style="max-width:420px;margin:0 auto">
+      <div class="pole"><label for="klic">KLÍČ SPRÁVY</label><input type="password" id="klic" autocomplete="current-password"></div>
+      <div id="klic-chyba" class="alert chyba skryt"></div>
+      <button class="btn plna" type="submit">Vstoupit</button>
+    </form>
+  </section>
+
+  <section id="obsah" class="skryt">
+    <div class="taby"><button class="akt" data-tab="tymy">Týmy</button><button data-tab="hra">Obsah hry</button></div>
+
+    <!-- TÝMY -->
+    <div id="tab-tymy">
+      <div class="cisla" id="cisla"></div>
+      <details class="card" style="margin-bottom:14px">
+        <summary style="cursor:pointer;font-family:'Cinzel',serif;color:var(--gold);font-size:15px;letter-spacing:.06em">+ Založit vstupenku ručně (beta, škola, dárek)</summary>
+        <form class="form" id="f-vytvor" style="margin-top:12px">
+          <div class="mriz">
+            <div class="pole"><label>E-MAIL</label><input type="email" id="v-email" required></div>
+            <div class="pole"><label>POZNÁMKA</label><input id="v-pozn" placeholder="např. beta rodina Novákovi"></div>
+          </div>
+          <label class="souhlas"><input type="checkbox" id="v-zdarma"><span>Zdarma (částka 0 Kč)</span></label>
+          <div class="radek-btn"><button class="btn mala" type="submit">Založit a poslat odkaz</button><span id="v-vysledek" style="font-size:15px;color:#cdbfa6"></span></div>
+        </form>
+      </details>
+      <div class="filtry">
+        <button class="akt" data-f="vse">Vše</button><button data-f="ceka_platbu">Čeká na platbu</button><button data-f="zaplaceno">Zaplaceno</button><button data-f="registrovano">Registrováno</button>
+        <input id="hledat" placeholder="hledat e-mail / tým / VS">
+      </div>
+      <div class="tymy" id="tymy"></div>
+    </div>
+
+    <!-- OBSAH HRY -->
+    <div id="tab-hra" class="skryt">
+      <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Odpovědi piš každou na nový řádek. Porovnává se bez diakritiky, velikosti písmen a interpunkce, takže „Masaryk“ = „masaryk“ = „MASARYK“. Světla se hráčům ukazují postupně v pořadí.</p>
+      <div id="kapitoly"></div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="/web.js"></script>
+<script>
+(function(){
+  const $ = (s) => document.querySelector(s);
+  let data = null, filtr = 'vse', hled = '';
+  const toast = (t) => { const e = $('#toast'); e.textContent = t; e.classList.add('ukaz'); setTimeout(() => e.classList.remove('ukaz'), 2200); };
+  const api = (akce, body) => OMG.api('/api/sprava', Object.assign({ akce }, body || {}));
+  const fmt = (iso) => iso ? new Date(iso).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+  const lokal = (iso) => { if (!iso) return ''; const d = new Date(iso); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+
+  async function nacti() {
+    try { data = await api('prehled'); $('#prihlaseni').classList.add('skryt'); $('#obsah').classList.remove('skryt'); vykresliTymy(); vykresliObsah(); }
+    catch (e) { localStorage.removeItem('omg_admin_key'); $('#prihlaseni').classList.remove('skryt'); $('#obsah').classList.add('skryt'); if (e.message.includes('klíč')) { $('#klic-chyba').textContent = e.message; $('#klic-chyba').classList.remove('skryt'); } }
+  }
+
+  $('#f-klic').addEventListener('submit', (e) => { e.preventDefault(); localStorage.setItem('omg_admin_key', $('#klic').value.trim()); nacti(); });
+  $('#odhlasit').addEventListener('click', (e) => { e.preventDefault(); localStorage.removeItem('omg_admin_key'); location.reload(); });
+  document.querySelectorAll('.taby button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.taby button').forEach(x => x.classList.toggle('akt', x === b));
+    $('#tab-tymy').classList.toggle('skryt', b.dataset.tab !== 'tymy'); $('#tab-hra').classList.toggle('skryt', b.dataset.tab !== 'hra');
+  }));
+  document.querySelectorAll('.filtry button').forEach(b => b.addEventListener('click', () => { filtr = b.dataset.f; document.querySelectorAll('.filtry button').forEach(x => x.classList.toggle('akt', x === b)); vykresliTymy(); }));
+  $('#hledat').addEventListener('input', (e) => { hled = e.target.value.trim().toLowerCase(); vykresliTymy(); });
+
+  // ── týmy ──────────────────────────────────────────────────────
+  function vykresliTymy() {
+    const c = data.cisla;
+    $('#cisla').innerHTML = `<div><b>${c.zaplaceno}</b><span>zaplaceno</span></div><div><b>${c.registrovano}</b><span>týmů ve hře</span></div><div><b>${c.ceka}</b><span>čeká na platbu</span></div><div><b>${c.trzba} Kč</b><span>tržba</span></div>`;
+    const seznam = data.tymy.filter(t => {
+      if (filtr === 'registrovano') { if (!(t.stav === 'zaplaceno' && t.nazev_tymu)) return false; }
+      else if (filtr !== 'vse' && t.stav !== filtr) return false;
+      if (hled && !`${t.email} ${t.nazev_tymu || ''} ${t.vs}`.toLowerCase().includes(hled)) return false;
+      return true;
+    });
+    $('#tymy').innerHTML = seznam.length ? seznam.map(t => `
+      <div class="tym" data-id="${t.id}">
+        <div>
+          <div class="hl">${t.nazev_tymu ? `<b>${OMG.esc(t.nazev_tymu)}</b> · ` : ''}${OMG.esc(t.email)} <span class="st ${t.stav === 'zaplaceno' ? 'zap' : (t.stav === 'zruseno' ? 'zrus' : 'ceka')}">${t.stav === 'zaplaceno' ? 'zaplaceno' : (t.stav === 'zruseno' ? 'zrušeno' : 'čeká na platbu')}</span></div>
+          <div class="det">VS ${t.vs} · ${t.platba === 'stripe' ? 'karta' : 'převod'} · ${t.castka} Kč · založeno ${fmt(t.created_at)}${t.zaplaceno_at ? ` · zaplaceno ${fmt(t.zaplaceno_at)}` : ''}
+            ${t.nazev_tymu ? `<br>${t.pocet_hracu} hráčů, věk ${OMG.esc(t.vek_hracu || '')} · ${t.body} b.` : ''}${t.zdroj ? ` · zdroj: ${OMG.esc(t.zdroj)}` : ''}${t.poznamka ? `<br>✎ ${OMG.esc(t.poznamka)}` : ''}</div>
+        </div>
+        <div class="akce">
+          ${t.stav === 'ceka_platbu' ? `<button class="hlavni" data-a="zaplaceno">Označit zaplaceno</button><button data-a="zrusit">Zrušit</button>` : ''}
+          ${t.stav === 'zaplaceno' ? `<button data-a="odkaz">Poslat odkaz</button><a href="/tym?k=${t.token}" target="_blank">Otevřít tým</a>` : ''}
+          <button data-a="poznamka">Poznámka</button>
+        </div>
+      </div>`).join('') : '<p class="stred" style="color:#cdbfa6">Nic tu zatím není.</p>';
+  }
+  $('#tymy').addEventListener('click', async (e) => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const id = b.closest('.tym').dataset.id, t = data.tymy.find(x => x.id === id);
+    try {
+      if (b.dataset.a === 'zaplaceno') { if (!confirm(`Označit vstupenku VS ${t.vs} (${t.email}) jako zaplacenou a poslat odkaz do hry?`)) return; await api('tymy.zaplaceno', { id }); toast('Zaplaceno, odkaz odeslán.'); }
+      if (b.dataset.a === 'zrusit')    { if (!confirm('Zrušit tuhle nezaplacenou vstupenku?')) return; await api('tymy.zrusit', { id }); toast('Zrušeno.'); }
+      if (b.dataset.a === 'odkaz')     { await api('tymy.odkaz', { id }); toast('Odkaz odeslán.'); }
+      if (b.dataset.a === 'poznamka')  { const p = prompt('Poznámka k týmu:', t.poznamka || ''); if (p === null) return; await api('tymy.poznamka', { id, poznamka: p }); toast('Uloženo.'); }
+      await nacti();
+    } catch (err) { alert(err.message); }
+  });
+  $('#f-vytvor').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const d = await api('tymy.vytvor', { email: $('#v-email').value, poznamka: $('#v-pozn').value, castka: $('#v-zdarma').checked ? 0 : undefined });
+      $('#v-vysledek').innerHTML = `Hotovo — odkaz odeslán: <a href="${d.odkaz}" target="_blank" style="color:var(--gold)">${d.odkaz}</a>`;
+      $('#v-email').value = ''; $('#v-pozn').value = ''; await nacti();
+    } catch (err) { alert(err.message); }
+  });
+
+  // ── obsah hry ─────────────────────────────────────────────────
+  function poleKap(k) {
+    return `<div class="kapitola" data-id="${k.id}">
+      <h3>${k.poradi}. kapitola</h3>
+      <div class="form">
+        <div class="mriz">
+          <div class="pole"><label>NÁZEV</label><input name="nazev" value="${OMG.esc(k.nazev)}"></div>
+          <div class="pole"><label>PODTITUL</label><input name="podtitul" value="${OMG.esc(k.podtitul || '')}"></div>
+          <div class="pole"><label>OTEVŘE SE</label><input type="datetime-local" name="otevreno_od" value="${lokal(k.otevreno_od)}"></div>
+          <div class="pole"><label>AUDIO (URL)</label><input name="audio_url" value="${OMG.esc(k.audio_url || '')}" placeholder="https://…/papavilon-1.mp3"></div>
+          <div class="pole cely"><label>ÚVOD KAPITOLY</label><textarea name="uvod">${OMG.esc(k.uvod || '')}</textarea></div>
+        </div>
+        <div class="radek-btn"><button class="btn mala" data-a="kap-uloz">Uložit kapitolu</button><button class="btn sec mala" data-a="svetlo-nove">+ Přidat světlo</button></div>
+      </div>
+      <div class="svetla">${data.stanoviste.filter(s => s.kapitola_id === k.id).map(poleSvetlo).join('')}</div>
+    </div>`;
+  }
+  function poleSvetlo(s) {
+    const nove = !s.id;
+    return `<details class="svetlo-ed" data-id="${s.id || ''}" ${nove ? 'open' : ''}>
+      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : `${s.body} b.`}</span></summary>
+      <div class="form">
+        <div class="mriz">
+          <div class="pole"><label>POŘADÍ</label><input type="number" name="poradi" value="${s.poradi}"></div>
+          <div class="pole"><label>TYP</label><select name="typ"><option value="odpoved" ${s.typ !== 'info' ? 'selected' : ''}>Odpověď (tajenka, heslo…)</option><option value="info" ${s.typ === 'info' ? 'selected' : ''}>Jen přečíst / poslechnout</option></select></div>
+          <div class="pole"><label>NÁZEV SVĚTLA</label><input name="nazev" value="${OMG.esc(s.nazev || '')}"></div>
+          <div class="pole"><label>MÍSTO (kam jít)</label><input name="misto" value="${OMG.esc(s.misto || '')}" placeholder="např. kašna na Velkém náměstí"></div>
+          <div class="pole cely"><label>ZADÁNÍ</label><textarea name="zadani">${OMG.esc(s.zadani || '')}</textarea></div>
+          <div class="pole cely"><label>UZNÁVANÉ ODPOVĚDI (každá na nový řádek)</label><textarea name="odpovedi">${OMG.esc((s.odpovedi || []).join('\n'))}</textarea></div>
+          <div class="pole cely"><label>PAPAVILONOVA NÁPOVĚDA</label><textarea name="napoveda" style="min-height:60px">${OMG.esc(s.napoveda || '')}</textarea></div>
+          <div class="pole"><label>BODY</label><input type="number" name="body" value="${s.body ?? 100}"></div>
+          <div class="pole"><label>SRÁŽKA ZA NÁPOVĚDU</label><input type="number" name="srazka_napoveda" value="${s.srazka_napoveda ?? 20}"></div>
+          <div class="pole"><label>AUDIO (URL)</label><input name="audio_url" value="${OMG.esc(s.audio_url || '')}"></div>
+          <div class="pole"><label>OBRÁZEK (URL)</label><input name="obrazek_url" value="${OMG.esc(s.obrazek_url || '')}"></div>
+        </div>
+        <label class="souhlas"><input type="checkbox" name="aktivni" ${s.aktivni !== false ? 'checked' : ''}><span>Viditelné pro hráče</span></label>
+        <div class="radek-btn"><button class="btn mala" data-a="svetlo-uloz">Uložit světlo</button>${nove ? '' : '<button class="btn sec mala" data-a="svetlo-smaz">Smazat</button>'}</div>
+      </div>
+    </details>`;
+  }
+  function vykresliObsah() { $('#kapitoly').innerHTML = data.kapitoly.map(poleKap).join(''); }
+  const hodnoty = (root) => { const o = {}; root.querySelectorAll('[name]').forEach(el => { o[el.name] = el.type === 'checkbox' ? el.checked : el.value; }); return o; };
+
+  $('#kapitoly').addEventListener('click', async (e) => {
+    const b = e.target.closest('button[data-a]'); if (!b) return; e.preventDefault();
+    const kap = b.closest('.kapitola'), kapId = +kap.dataset.id;
+    try {
+      if (b.dataset.a === 'kap-uloz') { await api('kapitola.uloz', Object.assign({ id: kapId }, hodnoty(kap.querySelector(':scope > .form')))); toast('Kapitola uložena.'); await nacti(); }
+      if (b.dataset.a === 'svetlo-nove') {
+        const poradi = data.stanoviste.filter(s => s.kapitola_id === kapId).length + 1;
+        kap.querySelector('.svetla').insertAdjacentHTML('beforeend', poleSvetlo({ kapitola_id: kapId, poradi, typ: 'odpoved', body: 100, srazka_napoveda: 20, odpovedi: [], aktivni: true }));
+      }
+      if (b.dataset.a === 'svetlo-uloz') {
+        const el = b.closest('.svetlo-ed');
+        await api('stanoviste.uloz', Object.assign({ id: el.dataset.id || undefined, kapitola_id: kapId }, hodnoty(el)));
+        toast('Světlo uloženo.'); await nacti();
+      }
+      if (b.dataset.a === 'svetlo-smaz') { if (!confirm('Smazat tohle světlo i s postupem týmů na něm?')) return; await api('stanoviste.smaz', { id: b.closest('.svetlo-ed').dataset.id }); toast('Smazáno.'); await nacti(); }
+    } catch (err) { alert(err.message); }
+  });
+
+  if (localStorage.getItem('omg_admin_key')) nacti(); else $('#prihlaseni').classList.remove('skryt');
+})();
+</script>
+</body>
+</html>

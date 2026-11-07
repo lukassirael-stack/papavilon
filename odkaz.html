@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zapomenutý odkaz — Velká Vánoční jízda 2026</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link rel="stylesheet" href="/styl.css">
+</head>
+<body class="page">
+<header class="top">
+  <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
+  <nav><a href="/vstupenka">Vstupenka</a><a href="/zebricek">Žebříček</a></nav>
+</header>
+
+<main>
+  <div class="kicker">MŮJ TÝM</div>
+  <h2 class="zlata">Zapomenutý odkaz</h2>
+  <p class="lead">Napiš e-mail, se kterým jsi kupoval/a vstupenku. Odkaz do hry ti pošleme znovu.</p>
+  <form class="card form" id="f" novalidate>
+    <div class="pole"><label for="email">E-MAIL</label><input type="email" id="email" required autocomplete="email" inputmode="email"></div>
+    <div id="zprava" class="alert skryt"></div>
+    <button class="btn plna" type="submit" id="btn">Poslat odkaz</button>
+  </form>
+</main>
+
+<footer>
+  <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Kroměříž · <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
+</footer>
+
+<script src="/web.js"></script>
+<script>
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const z = document.getElementById('zprava'), btn = document.getElementById('btn');
+  const email = document.getElementById('email').value.trim();
+  z.className = 'alert skryt';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { z.className = 'alert chyba'; z.textContent = 'Zadej platný e-mail.'; return; }
+  btn.disabled = true;
+  try {
+    await OMG.api('/api/odkaz', { email });
+    z.className = 'alert ok'; z.textContent = 'Hotovo. Pokud k tomuto e-mailu patří zaplacená vstupenka, odkaz je na cestě. Mrkni i do hromadné pošty.';
+  } catch (err) { z.className = 'alert chyba'; z.textContent = err.message; }
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>

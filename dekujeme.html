@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Děkujeme — Velká Vánoční jízda 2026</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link rel="stylesheet" href="/styl.css">
+</head>
+<body class="page">
+<header class="top">
+  <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
+  <nav><a href="/tym">Můj tým</a><a href="/zebricek">Žebříček</a></nav>
+</header>
+
+<main>
+  <div class="kicker">VELKÁ VÁNOČNÍ JÍZDA 2026</div>
+  <h2 class="zlata">Děkujeme</h2>
+
+  <section id="cekam">
+    <p class="lead">Ověřujeme platbu…</p>
+  </section>
+
+  <section id="hotovo" class="skryt">
+    <p class="lead">Vstupenka je tvoje. Papavilon už na tebe čeká — teď pojmenuj svůj tým.</p>
+    <div class="card stred">
+      <a class="btn" id="odkaz" href="#">Vstoupit do hry</a>
+      <p style="margin-top:14px;font-size:16px;color:#cdbfa6">Stejný odkaz máš i v e-mailu. Ulož si ho do telefonu, se kterým vyrazíte do ulic.</p>
+    </div>
+  </section>
+
+  <section id="ceka" class="skryt">
+    <p class="lead">Platba se ještě zpracovává. Jakmile dorazí, přijde ti e-mail s odkazem do hry.</p>
+    <p class="stred"><a class="btn sec" href="/odkaz">Poslat odkaz znovu</a></p>
+  </section>
+
+  <section id="chyba" class="skryt">
+    <div class="alert chyba" id="chyba-text"></div>
+    <div class="mezera"></div>
+    <p class="stred"><a class="btn sec" href="/vstupenka">Zpět na vstupenku</a></p>
+  </section>
+</main>
+
+<footer>
+  <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Kroměříž · <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
+</footer>
+
+<script src="/web.js"></script>
+<script>
+(async function(){
+  const s = new URLSearchParams(location.search).get('s');
+  const ukaz = (id) => { ['cekam','hotovo','ceka','chyba'].forEach(x => document.getElementById(x).classList.toggle('skryt', x !== id)); };
+  if (!s) { document.getElementById('chyba-text').textContent = 'Chybí údaj o platbě.'; return ukaz('chyba'); }
+  let pokus = 0;
+  const over = async () => {
+    try {
+      const d = await OMG.api('/api/stripe-stav?s=' + encodeURIComponent(s));
+      if (d.stav === 'zaplaceno' && d.token) { document.getElementById('odkaz').href = '/tym?k=' + d.token; return ukaz('hotovo'); }
+      if (++pokus < 6) return setTimeout(over, 2500);
+      ukaz('ceka');
+    } catch (e) { document.getElementById('chyba-text').textContent = e.message; ukaz('chyba'); }
+  };
+  over();
+})();
+</script>
+</body>
+</html>
