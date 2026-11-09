@@ -19,6 +19,8 @@ img{max-width:100%}
   background:radial-gradient(ellipse 60% 55% at 58% 34%, rgba(80,28,145,.5), transparent 70%),
     linear-gradient(180deg, rgba(8,12,45,.55) 0%, transparent 18%, transparent 70%, rgba(8,12,45,.55) 100%);}
 
+.jmenovka{position:absolute;z-index:1;left:5%;bottom:11%;width:min(25vw,360px);height:auto;pointer-events:none;
+  filter:drop-shadow(0 6px 14px rgba(10,4,30,.75)) drop-shadow(0 0 22px rgba(60,20,120,.5))}
 .nav{position:relative;z-index:3;display:flex;align-items:center;justify-content:flex-end;gap:clamp(14px,2.2vw,34px);
   padding:clamp(14px,2vw,26px) clamp(16px,3vw,40px);font-size:clamp(16px,1.35vw,21px);font-weight:600}
 .nav a.link{text-shadow:0 1px 8px rgba(0,0,0,.6);opacity:.95;transition:color .2s}
@@ -67,6 +69,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 }
 .features-m{display:none}
 @media (max-aspect-ratio: 4/5){
+  .jmenovka{left:4%;bottom:auto;top:calc(100svh - 109px - 17.5vw);width:40vw}
   .hero picture img{object-position:50% 100%}
   .hero::after{background:linear-gradient(180deg, rgba(8,12,45,.55) 0%, transparent 30%, transparent 70%, rgba(8,12,45,.45) 100%)}
   .content{width:100%;margin:0;padding:0 18px}
@@ -91,6 +94,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
   .hero picture img{position:relative;height:auto;aspect-ratio:16/9;display:block}
   .hero::after{bottom:auto;height:56.25vw}
   .nav{position:absolute;top:0;left:0;right:0}
+  .jmenovka{left:4vw;bottom:auto;top:calc(56.25vw - 27vw);width:24vw}
   .content{position:static;width:auto;margin:0;padding:0}
   .head{position:absolute;top:clamp(56px,8vw,90px);right:3vw;width:52vw;text-align:center}
   h1{font-size:clamp(30px,6vw,64px)}
