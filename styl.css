@@ -90,9 +90,11 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 }
 @media (max-aspect-ratio: 4/5) and (max-height: 760px){
   .hero .features{display:none}
-  .features-m{display:grid;grid-template-columns:repeat(4,1fr);padding:22px 8px 30px;background:linear-gradient(180deg,#151a4d,#0d1440)}
-  .features-m .feat{font-size:12.5px;gap:5px;padding:0 4px}
-  .features-m .feat svg{width:30px;height:30px}
+  .features-m{display:grid;grid-template-columns:1fr 1fr;gap:18px 8px;padding:24px 18px 30px;text-align:center;background:linear-gradient(180deg,#151a4d,#0d1440)}
+  .features-m .feat{font-size:15px;line-height:1.2;gap:8px;padding:0 6px;justify-content:flex-start}
+  .features-m .feat svg{width:42px;height:42px}
+  .features-m .feat+.feat::before{display:none}
+  .features-m .feat:nth-child(even)::before{content:"";display:block;position:absolute;left:0;top:10%;bottom:10%;width:1px;background:linear-gradient(180deg,transparent,var(--gold2),transparent)}
 }
 @media (min-aspect-ratio: 4/5) and (max-aspect-ratio: 13/10){
   .hero{min-height:0}
