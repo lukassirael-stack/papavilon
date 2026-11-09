@@ -6,6 +6,20 @@ window.OMG = {
 
   registraceOtevrena() { return Date.now() >= new Date(this.REGISTRACE_OD).getTime(); },
 
+  // stav prodeje ze serveru (datum otevření se mění ve správě); při výpadku platí konstanta výše
+  async stav() {
+    try {
+      const d = await this.api('/api/stav');
+      if (d.registrace_od) this.REGISTRACE_OD = d.registrace_od;
+      return d;
+    } catch (e) { return { registrace_od: this.REGISTRACE_OD, otevreno: this.registraceOtevrena(), cena: this.CENA }; }
+  },
+
+  datumDlouhe(iso) {
+    const d = new Date(iso), m = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+    return `${d.getDate()}. ${m[d.getMonth()]} ${d.getFullYear()}`;
+  },
+
   // odpočet do data: vykreslí dny / hodiny / minuty do prvku
   odpocet(el, datum, hotovo) {
     const cil = new Date(datum).getTime();

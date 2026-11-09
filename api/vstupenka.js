@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const email  = String(d.email || '').trim().toLowerCase();
     const platba = d.platba === 'prevod' ? 'prevod' : 'stripe';
 
-    if (!registraceOtevrena(d.beta)) return res.status(403).json({ chyba: 'Registrace se otevírá 27. listopadu 2026.' });
+    if (!(await registraceOtevrena(d.beta))) return res.status(403).json({ chyba: 'Prodej vstupenek se teprve otevře. Sleduj hlavní stránku.' });
     if (!jeEmail(email))            return res.status(400).json({ chyba: 'Zadej platný e-mail, tam ti přijde odkaz do hry.' });
     if (!d.souhlas)                 return res.status(400).json({ chyba: 'Potvrď prosím souhlas s pravidly hry.' });
 

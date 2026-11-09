@@ -3,9 +3,10 @@ import { randomUUID, randomBytes } from 'node:crypto';
 
 const DB = {
   omg_tymy: [], omg_kapitoly: [], omg_stanoviste: [], omg_pokrok: [], omg_pokusy: [],
+  nastaveni: [{ klic: 'omg_registrace_od', hodnota: '2026-11-27T00:00:00+01:00' }],
 };
 let vsSeq = 26120001, kapSeq = 1, stanSeq = 1, pokusSeq = 1;
-const PK = { omg_tymy: ['id'], omg_kapitoly: ['id'], omg_stanoviste: ['id'], omg_pokrok: ['tym_id', 'stanoviste_id'], omg_pokusy: ['id'] };
+const PK = { omg_tymy: ['id'], omg_kapitoly: ['id'], omg_stanoviste: ['id'], omg_pokrok: ['tym_id', 'stanoviste_id'], omg_pokusy: ['id'], nastaveni: ['klic'] };
 
 function defaults(table, row) {
   const now = new Date().toISOString();

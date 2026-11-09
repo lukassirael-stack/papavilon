@@ -4,7 +4,7 @@
 //  POST { akce, ...data }
 // ════════════════════════════════════════════════════════════════════
 
-import { HRA, CENA, supabase, cors, jeAdmin, siteUrl, oznacZaplaceno, emailOdkazDoHry, jeEmail } from '../lib/spolecne.js';
+import { HRA, CENA, supabase, cors, jeAdmin, siteUrl, oznacZaplaceno, emailOdkazDoHry, jeEmail, registraceOd } from '../lib/spolecne.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -27,7 +27,9 @@ export default async function handler(req, res) {
           sb.from('omg_stanoviste').select('*').order('kapitola_id').order('poradi'),
         ]);
         const t = tymy || [];
+        const od = await registraceOd();
         return res.status(200).json({
+          prodej: { registrace_od: od, otevreno: Date.now() >= new Date(od).getTime() },
           cisla: {
             celkem: t.length,
             ceka: t.filter((x) => x.stav === 'ceka_platbu').length,
@@ -37,6 +39,18 @@ export default async function handler(req, res) {
           },
           tymy: t, kapitoly: kapitoly || [], stanoviste: stanoviste || [],
         });
+      }
+
+      // ── prodej vstupenek: otevřít hned / od data / zavřít ───────
+      case 'prodej.nastav': {
+        let od;
+        if (d.rezim === 'hned') od = new Date();
+        else if (d.rezim === 'zavrit') od = new Date('2099-01-01T00:00:00Z');
+        else od = new Date(d.registrace_od);
+        if (Number.isNaN(od.getTime())) return res.status(400).json({ chyba: 'Zadej platné datum a čas.' });
+        const { error } = await sb.from('nastaveni').upsert({ klic: 'omg_registrace_od', hodnota: od.toISOString() }, { onConflict: 'klic' });
+        if (error) return res.status(400).json({ chyba: error.message });
+        return res.status(200).json({ uspech: true, registrace_od: od.toISOString(), otevreno: Date.now() >= od.getTime() });
       }
 
       // ── týmy ────────────────────────────────────────────────────

@@ -22,7 +22,7 @@
 
   <!-- před otevřením registrace -->
   <section id="zavreno" class="skryt">
-    <p class="lead">Registrace se otevírá <b style="color:var(--gold)">27. listopadu 2026</b>. Do té doby si připrav tým a vyber jméno.</p>
+    <p class="lead">Prodej vstupenek se otevírá <b style="color:var(--gold)" id="z-datum">brzy</b>. Do té doby si připrav tým a vyber jméno.</p>
     <div class="odpocet" id="odpocet"></div>
     <p class="stred"><a class="btn sec" href="/">Zpět na hlavní stránku</a></p>
   </section>
@@ -94,8 +94,12 @@
   const beta = q.get('beta') || '';
   const zav = document.getElementById('zavreno'), form = document.getElementById('formular');
 
-  if (OMG.registraceOtevrena() || beta) form.classList.remove('skryt');
-  else { zav.classList.remove('skryt'); OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, () => { zav.classList.add('skryt'); form.classList.remove('skryt'); }); }
+  OMG.stav().then(s => {
+    if (s.otevreno || OMG.registraceOtevrena() || beta) return form.classList.remove('skryt');
+    zav.classList.remove('skryt');
+    document.getElementById('z-datum').textContent = OMG.datumDlouhe(OMG.REGISTRACE_OD);
+    OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, () => { zav.classList.add('skryt'); form.classList.remove('skryt'); });
+  });
   if (q.get('zruseno')) document.getElementById('zruseno').classList.remove('skryt');
 
   const f = document.getElementById('f'), btn = document.getElementById('odeslat'), chyba = document.getElementById('chyba');

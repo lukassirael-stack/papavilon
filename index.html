@@ -224,8 +224,8 @@
     <div class="kicker">REGISTRACE TÝMŮ</div>
     <h2>Připrav svůj tým</h2>
     <div id="reg-pred">
-      <p class="lead">Registrace se otevírá v pátek před první adventní nedělí.</p>
-      <div class="date-big">27. listopadu 2026</div>
+      <p class="lead">Prodej vstupenek se brzy otevře. Připrav si tým a vyber mu jméno.</p>
+      <div class="date-big" id="reg-datum"></div>
       <div class="odpocet" id="odpocet"></div>
       <a class="cta" href="#vanocni-jizda">Prohlédnout Vánoční jízdu <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M2 2l8 8-8 8"/></svg></a>
     </div>
@@ -252,13 +252,14 @@
     window.scrollTo(0,0);
   });
 
-  // registrace: odpočet → po otevření se sekce přepne sama
-  (function(){
+  // registrace: datum otevření přijde ze serveru (mění se ve správě); odpočet → po otevření se sekce přepne sama
+  OMG.stav().then(s => {
     const pred = document.getElementById('reg-pred'), po = document.getElementById('reg-po');
     const otevri = () => { pred.classList.add('skryt'); po.classList.remove('skryt'); };
-    if (OMG.registraceOtevrena()) otevri();
-    else OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, otevri);
-  })();
+    if (s.otevreno || OMG.registraceOtevrena()) return otevri();
+    document.getElementById('reg-datum').textContent = OMG.datumDlouhe(OMG.REGISTRACE_OD);
+    OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, otevri);
+  });
 
   // náhled žebříčku (prvních 5)
   OMG.api('/api/zebricek').then(d => {

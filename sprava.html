@@ -70,6 +70,21 @@
 
     <!-- TÝMY -->
     <div id="tab-tymy">
+      <div class="card" id="prodej" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div class="kicker" style="text-align:left;margin-bottom:4px">PRODEJ VSTUPENEK</div>
+            <div id="prodej-stav" style="font-size:19px"></div>
+          </div>
+          <div class="radek-btn">
+            <button class="btn mala" id="prodej-hned">Otevřít prodej teď</button>
+            <input type="datetime-local" id="prodej-datum" style="padding:8px 10px;border-radius:999px;border:1px solid rgba(246,198,106,.4);background:rgba(10,12,50,.7);color:var(--ink);font-family:inherit;font-size:15px">
+            <button class="btn sec mala" id="prodej-od">Otevřít od data</button>
+            <button class="btn sec mala" id="prodej-zavrit">Zavřít</button>
+          </div>
+        </div>
+        <p style="font-size:15px;color:#a99cc7;margin-top:10px">Před otevřením: zkušební platba kartou přes /vstupenka?beta=… (pak refund ve Stripe), doplněná světla 1. kapitoly, údaje k účtu ve Stripe. Hlavní stránka i vstupenka se přepnou samy do minuty.</p>
+      </div>
       <div class="cisla" id="cisla"></div>
       <details class="card" style="margin-bottom:14px">
         <summary style="cursor:pointer;font-family:'Cinzel',serif;color:var(--gold);font-size:15px;letter-spacing:.06em">+ Založit vstupenku ručně (beta, škola, dárek)</summary>
@@ -122,8 +137,27 @@
   document.querySelectorAll('.filtry button').forEach(b => b.addEventListener('click', () => { filtr = b.dataset.f; document.querySelectorAll('.filtry button').forEach(x => x.classList.toggle('akt', x === b)); vykresliTymy(); }));
   $('#hledat').addEventListener('input', (e) => { hled = e.target.value.trim().toLowerCase(); vykresliTymy(); });
 
+  // ── prodej vstupenek ──────────────────────────────────────────
+  function vykresliProdej() {
+    const p = data.prodej || {}; const od = p.registrace_od ? new Date(p.registrace_od) : null;
+    const el = $('#prodej-stav');
+    if (p.otevreno) el.innerHTML = `<b style="color:var(--ok)">Otevřeno</b> <span style="color:#cdbfa6;font-size:15px">od ${od ? od.toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</span>`;
+    else if (od && od.getFullYear() > 2090) el.innerHTML = `<b style="color:var(--warn)">Zavřeno</b> <span style="color:#cdbfa6;font-size:15px">bez naplánovaného termínu</span>`;
+    else el.innerHTML = `<b style="color:var(--warn)">Otevře se</b> ${od ? od.toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}`;
+    if (od && od.getFullYear() < 2090) $('#prodej-datum').value = lokal(od.toISOString());
+    $('#prodej-hned').classList.toggle('skryt', !!p.otevreno);
+  }
+  async function nastavProdej(body, potvrzeni) {
+    if (potvrzeni && !confirm(potvrzeni)) return;
+    try { await api('prodej.nastav', body); toast('Nastaveno.'); await nacti(); } catch (e) { alert(e.message); }
+  }
+  $('#prodej-hned').addEventListener('click', () => nastavProdej({ rezim: 'hned' }, 'Otevřít prodej vstupenek hned? Hlavní stránka i /vstupenka se přepnou během minuty.\n\nMáš za sebou zkušební platbu kartou a doplněná světla 1. kapitoly?'));
+  $('#prodej-od').addEventListener('click', () => { const v = $('#prodej-datum').value; if (!v) return alert('Vyber datum a čas.'); nastavProdej({ rezim: 'od', registrace_od: new Date(v).toISOString() }); });
+  $('#prodej-zavrit').addEventListener('click', () => nastavProdej({ rezim: 'zavrit' }, 'Zavřít prodej? Koupené vstupenky a hra týmů běží dál, jen nové vstupenky nepůjdou koupit.'));
+
   // ── týmy ──────────────────────────────────────────────────────
   function vykresliTymy() {
+    vykresliProdej();
     const c = data.cisla;
     $('#cisla').innerHTML = `<div><b>${c.zaplaceno}</b><span>zaplaceno</span></div><div><b>${c.registrovano}</b><span>týmů ve hře</span></div><div><b>${c.ceka}</b><span>čeká na platbu</span></div><div><b>${c.trzba} Kč</b><span>tržba</span></div>`;
     const seznam = data.tymy.filter(t => {
