@@ -71,7 +71,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 @media (max-aspect-ratio: 4/5){
   .jmenovka{left:4%;bottom:auto;top:calc(100svh - 109px - 17.5vw);width:40vw}
   .head .sub{display:none}
-  .sub-namesti{display:block;position:absolute;z-index:2;right:4%;width:52%;bottom:111px;text-align:right;
+  .sub-namesti{display:block;position:absolute;z-index:2;left:52%;right:4%;top:74.5svh;transform:translateY(-50%);text-align:center;
     font-size:clamp(16px,4.7vw,21px);line-height:1.2;font-weight:700;color:#fff3d6;text-shadow:0 2px 4px rgba(0,0,20,.95),0 0 22px rgba(0,0,30,.95)}
   .sub-namesti br{display:none}
   .hero picture img{object-position:50% 100%}
