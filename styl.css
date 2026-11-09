@@ -72,7 +72,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 @media (max-aspect-ratio: 4/5){
   .jmenovka{left:4%;bottom:auto;top:calc(100svh - 109px - min(17.5vw,110px));width:min(40vw,260px)}
   .head .sub{display:none}
-  .sub-namesti{display:block;position:absolute;z-index:2;left:44%;right:0;top:69svh;transform:translateY(-50%);text-align:center;
+  .sub-namesti{display:block;position:absolute;z-index:2;left:74%;right:auto;width:max-content;top:69svh;transform:translate(-50%,-50%);text-align:center;
     font-size:clamp(15px,4.6vw,30px);line-height:1.22;font-weight:700;letter-spacing:.01em;color:#fff3d6;text-shadow:0 2px 4px rgba(0,0,20,.95),0 0 22px rgba(0,0,30,.95)}
   .sub-namesti .r0,.sub-namesti .r1,.sub-namesti .r2,.sub-namesti .r3{display:block;white-space:nowrap}
 
