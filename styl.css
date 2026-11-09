@@ -169,6 +169,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
   background:radial-gradient(circle at 50% 45%,rgba(255,240,200,.95) 0 6%,rgba(190,140,255,.75) 14%,rgba(90,40,170,.6) 38%,rgba(20,14,60,.0) 70%);
   box-shadow:0 0 60px rgba(180,120,255,.45),inset 0 0 40px rgba(255,210,120,.3);border:2px solid rgba(246,198,106,.6);display:grid;place-items:center;animation:pulse 4s ease-in-out infinite}
 .sigil svg{width:62%;height:62%}
+.sigil img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
 @keyframes pulse{50%{box-shadow:0 0 90px rgba(200,140,255,.7),inset 0 0 50px rgba(255,210,120,.45)}}
 .prize p{font-size:20px;line-height:1.5;color:#efe2c8;margin-bottom:12px}
 .prize h3{font-family:'Cinzel',serif;text-transform:uppercase;letter-spacing:.07em;font-size:clamp(24px,2.6vw,34px);color:var(--gold);margin-bottom:12px}
