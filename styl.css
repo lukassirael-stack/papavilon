@@ -19,7 +19,7 @@ img{max-width:100%}
   background:radial-gradient(ellipse 60% 55% at 58% 34%, rgba(80,28,145,.5), transparent 70%),
     linear-gradient(180deg, rgba(8,12,45,.55) 0%, transparent 18%, transparent 70%, rgba(8,12,45,.55) 100%);}
 
-.jmenovka{position:absolute;z-index:1;left:5%;bottom:11%;width:min(25vw,360px);height:auto;pointer-events:none;
+.jmenovka{position:absolute;z-index:1;left:7.5%;bottom:11%;width:min(25vw,360px);height:auto;pointer-events:none;
   filter:drop-shadow(0 6px 14px rgba(10,4,30,.75)) drop-shadow(0 0 22px rgba(60,20,120,.5))}
 .nav{position:relative;z-index:3;display:flex;align-items:center;justify-content:flex-end;gap:clamp(14px,2.2vw,34px);
   padding:clamp(14px,2vw,26px) clamp(16px,3vw,40px);font-size:clamp(16px,1.35vw,21px);font-weight:600}
