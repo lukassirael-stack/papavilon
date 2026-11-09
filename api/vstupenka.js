@@ -48,7 +48,7 @@ export default async function handler(req, res) {
             unit_amount: CENA * 100,
             product_data: {
               name: `${NAZEV_HRY} — vstupenka pro tým`,
-              description: 'Celý advent, čtyři kapitoly, Papavilonův hlas a hra o Vánoční Sigil.',
+              description: 'Celý advent, čtyři kapitoly, Papavilonův hlas a hra o Papavilonův kouzelný artefakt.',
             },
           },
         }],
