@@ -1,11 +1,12 @@
 // ════════════════════════════════════════════════════════════════════
 //  /api/hra.js — herní akce týmu na stanovišti
-//  POST { k, akce: 'odpoved' | 'napoveda' | 'hotovo' | 'preskocit', stanoviste_id, odpoved? }
-//  → { vysledek, spravne?, body?, hra: { kapitoly, pozice }, tym }
+//  POST { k, akce: 'odpoved' | 'napoveda' | 'napoveda_over' | 'hotovo' | 'krystaly' | 'preskocit', stanoviste_id, odpoved?, n? }
+//  → { vysledek, hra: { kapitoly }, tym }   nápověda: { vysledek: 'platba', url } → Stripe (40 Kč)
 // ════════════════════════════════════════════════════════════════════
 
-import { supabase, cors, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
-import { stavHry, ulozKrystaly } from '../lib/hra.js';
+import Stripe from 'stripe';
+import { ENV, HRA, NAZEV_HRY, CENA_NAPOVEDY, supabase, cors, siteUrl, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
+import { stavHry, ulozKrystaly, odemkniNapovedu } from '../lib/hra.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -37,27 +38,51 @@ export default async function handler(req, res) {
     const ted = new Date().toISOString();
     const zaklad = { tym_id: tym.id, stanoviste_id: sid, pokusy: p?.pokusy || 0, napoveda_at: p?.napoveda_at || null };
 
-    const bodyZa = () => Math.max(0, (plne.body || 0) - (zaklad.napoveda_at ? (plne.srazka_napoveda || 0) : 0));
     const hotovo = async (extra) => {
       await sb.from('omg_pokrok').upsert({ ...zaklad, ...extra }, { onConflict: 'tym_id,stanoviste_id' });
       const { data: t2 } = await sb.from('omg_tymy').select('*').eq('id', tym.id).single();
-      return res.status(200).json({ vysledek: extra.preskoceno ? 'preskoceno' : 'spravne', body: extra.body, hra: await stavHry(t2, { admin }), tym: verejnyTym(t2) });
+      return res.status(200).json({ vysledek: extra.preskoceno ? 'preskoceno' : 'spravne', hra: await stavHry(t2, { admin }), tym: verejnyTym(t2) });
     };
 
-    // ── nápověda ──────────────────────────────────────────────────
+    const ukazNapovedu = async () => res.status(200).json({ vysledek: 'napoveda', napoveda: plne.napoveda, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
+
+    // ── nápověda: koupě přes Stripe (správce ji vidí zdarma) ──────
     if (d.akce === 'napoveda') {
       if (!plne.napoveda) return res.status(400).json({ chyba: 'Tady Papavilon nápovědu nechystá.' });
-      if (!zaklad.napoveda_at) {
-        zaklad.napoveda_at = ted;
-        await sb.from('omg_pokrok').upsert(zaklad, { onConflict: 'tym_id,stanoviste_id' });
-      }
-      return res.status(200).json({ vysledek: 'napoveda', napoveda: plne.napoveda, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
+      if (zaklad.napoveda_at) return ukazNapovedu();
+      if (admin) { await odemkniNapovedu({ tymId: tym.id, stanovisteId: sid, platba: 'spravce', castka: 0 }); return ukazNapovedu(); }
+      if (!ENV.STRIPE_SECRET_KEY) return res.status(500).json({ chyba: 'Platba nápovědy se právě připravuje.' });
+      const stripe = new Stripe(ENV.STRIPE_SECRET_KEY);
+      const site = siteUrl(req);
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment', locale: 'cs', customer_email: tym.email || undefined,
+        line_items: [{ quantity: 1, price_data: { currency: 'czk', unit_amount: CENA_NAPOVEDY * 100,
+          product_data: { name: `Papavilonova nápověda — ${plne.nazev || 'světlo'}`, description: NAZEV_HRY } } }],
+        metadata: { typ: 'napoveda', hra: HRA, tym_id: tym.id, stanoviste_id: String(sid) },
+        payment_intent_data: { description: `Napoveda VS ${tym.vs} svetlo ${sid}` },
+        success_url: `${site}/tym?k=${tym.token}&n={CHECKOUT_SESSION_ID}&s=${sid}`,
+        cancel_url:  `${site}/tym?k=${tym.token}`,
+      });
+      return res.status(200).json({ vysledek: 'platba', url: session.url });
+    }
+
+    // ── nápověda: ověření po návratu ze Stripe ────────────────────
+    if (d.akce === 'napoveda_over') {
+      if (zaklad.napoveda_at) return ukazNapovedu();
+      const n = String(d.n || '');
+      if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(n)) return res.status(400).json({ chyba: 'Neplatná platba.' });
+      const session = await new Stripe(ENV.STRIPE_SECRET_KEY).checkout.sessions.retrieve(n);
+      const m = session.metadata || {};
+      if (m.typ !== 'napoveda' || m.tym_id !== tym.id || String(m.stanoviste_id) !== String(sid)) return res.status(400).json({ chyba: 'Platba nepatří k tomuto světlu.' });
+      if (session.payment_status !== 'paid') return res.status(402).json({ chyba: 'Platba zatím nedorazila. Zkus to za chvilku znovu.' });
+      await odemkniNapovedu({ tymId: tym.id, stanovisteId: sid, platba: session.id, castka: Math.round((session.amount_total || 0) / 100) });
+      return ukazNapovedu();
     }
 
     // ── informační stanoviště: jen pokračovat ─────────────────────
     if (d.akce === 'hotovo') {
       if (plne.typ !== 'info') return res.status(400).json({ chyba: 'Tady se čeká na odpověď.' });
-      return hotovo({ vyreseno_at: ted, body: plne.body || 0, odpoved: null });
+      return hotovo({ vyreseno_at: ted, body: 0, odpoved: null });
     }
 
     // ── světlo „krystal“: tým zapíše čísla krystalů svých hráčů ───
@@ -65,12 +90,12 @@ export default async function handler(req, res) {
       if (plne.typ !== 'krystal') return res.status(400).json({ chyba: 'Tady se krystaly nezapisují.' });
       const v = await ulozKrystaly(tym, d.krystaly);
       if (v.chyba) return res.status(v.status).json({ chyba: v.chyba });
-      return hotovo({ vyreseno_at: ted, body: plne.body || 0, odpoved: v.hraci.map((h) => `${h.jmeno} ${h.krystal}`).join(', ') });
+      return hotovo({ vyreseno_at: ted, body: 0, odpoved: v.hraci.map((h) => `${h.jmeno} ${h.krystal}`).join(', ') });
     }
 
-    // ── přeskočit (po 5 pokusech s nápovědou) ─────────────────────
+    // ── přeskočit (po 5 pokusech; světlo s tajenkou se luští do konce) ──
     if (d.akce === 'preskocit') {
-      if (!stan.muze_preskocit) return res.status(400).json({ chyba: 'Přeskočit půjde po pěti pokusech s nápovědou.' });
+      if (!stan.muze_preskocit) return res.status(400).json({ chyba: 'Tohle světlo je potřeba rozluštit.' });
       return hotovo({ vyreseno_at: ted, preskoceno: true, body: 0, odpoved: null });
     }
 
@@ -91,7 +116,7 @@ export default async function handler(req, res) {
       await sb.from('omg_pokusy').insert({ tym_id: tym.id, stanoviste_id: sid, odpoved, spravne });
       zaklad.pokusy += 1;
 
-      if (spravne) return hotovo({ vyreseno_at: ted, body: bodyZa(), odpoved });
+      if (spravne) return hotovo({ vyreseno_at: ted, body: 0, odpoved });
 
       await sb.from('omg_pokrok').upsert(zaklad, { onConflict: 'tym_id,stanoviste_id' });
       return res.status(200).json({ vysledek: 'spatne', pokusy: zaklad.pokusy, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });

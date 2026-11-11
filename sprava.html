@@ -54,7 +54,7 @@
 <body class="page">
 <header class="top">
   <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
-  <nav><a href="/tym">Můj tým</a><a href="/zebricek">Žebříček</a><a href="#" id="odhlasit">Odhlásit</a></nav>
+  <nav><a href="/tym">Můj tým</a><a href="#" id="odhlasit">Odhlásit</a></nav>
 </header>
 
 <main>
@@ -170,7 +170,7 @@
   function vykresliTymy() {
     vykresliProdej();
     const c = data.cisla;
-    $('#cisla').innerHTML = `<div><b>${c.zaplaceno}</b><span>zaplaceno</span></div><div><b>${c.registrovano}</b><span>týmů ve hře</span></div><div><b>${c.ceka}</b><span>čeká na platbu</span></div><div><b>${c.trzba} Kč</b><span>tržba</span></div>`;
+    $('#cisla').innerHTML = `<div><b>${c.zaplaceno}</b><span>zaplaceno</span></div><div><b>${c.registrovano}</b><span>týmů ve hře</span></div><div><b>${c.ceka}</b><span>čeká na platbu</span></div><div><b>${c.trzba} Kč</b><span>tržba vstupenky</span></div><div><b>${c.napovedy || 0}× · ${c.trzba_napovedy || 0} Kč</b><span>nápovědy</span></div>`;
     const seznam = data.tymy.filter(t => {
       if (filtr === 'registrovano') { if (!(t.stav === 'zaplaceno' && t.nazev_tymu)) return false; }
       else if (filtr !== 'vse' && t.stav !== filtr) return false;
@@ -182,7 +182,7 @@
         <div>
           <div class="hl">${t.nazev_tymu ? `<b>${OMG.esc(t.nazev_tymu)}</b> · ` : ''}${OMG.esc(t.email)} <span class="st ${t.stav === 'zaplaceno' ? 'zap' : (t.stav === 'zruseno' ? 'zrus' : 'ceka')}">${t.stav === 'zaplaceno' ? 'zaplaceno' : (t.stav === 'zruseno' ? 'zrušeno' : 'čeká na platbu')}</span></div>
           <div class="det">VS ${t.vs} · ${t.platba === 'stripe' ? 'karta' : 'převod'} · ${t.castka} Kč · založeno ${fmt(t.created_at)}${t.zaplaceno_at ? ` · zaplaceno ${fmt(t.zaplaceno_at)}` : ''}
-            ${t.nazev_tymu ? `<br>${(t.hraci && t.hraci.length) ? t.hraci.map(h => `${OMG.esc(h.jmeno)} (${h.vek})${h.krystal ? ` 💎${OMG.esc(h.krystal)}` : ''}`).join(', ') : OMG.esc(t.vek_hracu || '')} · ${t.body} b.` : ''}${t.pocet_hracu ? ` · vstupenka pro ${t.pocet_hracu}` : ''}${t.zdroj ? ` · zdroj: ${OMG.esc(t.zdroj)}` : ''}${t.poznamka ? `<br>✎ ${OMG.esc(t.poznamka)}` : ''}</div>
+            ${t.nazev_tymu ? `<br>${(t.hraci && t.hraci.length) ? t.hraci.map(h => `${OMG.esc(h.jmeno)} (${h.vek})${h.krystal ? ` 💎${OMG.esc(h.krystal)}` : ''}`).join(', ') : OMG.esc(t.vek_hracu || '')}` : ''}${t.pocet_hracu ? ` · vstupenka pro ${t.pocet_hracu}` : ''}${t.zdroj ? ` · zdroj: ${OMG.esc(t.zdroj)}` : ''}${t.poznamka ? `<br>✎ ${OMG.esc(t.poznamka)}` : ''}</div>
         </div>
         <div class="akce">
           ${t.stav === 'ceka_platbu' ? `<button class="hlavni" data-a="zaplaceno">Označit zaplaceno</button><button data-a="zrusit">Zrušit</button>` : ''}
@@ -231,7 +231,7 @@
   function poleSvetlo(s) {
     const nove = !s.id;
     return `<details class="svetlo-ed" data-id="${s.id || ''}" ${nove ? 'open' : ''}>
-      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : s.typ === 'krystal' ? '💎 krystaly' : `${s.body} b.`}</span></summary>
+      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : s.typ === 'krystal' ? '💎 krystaly' : (s.lze_preskocit === false ? 'tajenka' : 'odpověď')}</span></summary>
       <div class="form">
         <div class="mriz">
           <div class="pole"><label>POŘADÍ</label><input type="number" name="poradi" value="${s.poradi}"></div>
@@ -240,13 +240,12 @@
           <div class="pole"><label>MÍSTO (kam jít)</label><input name="misto" value="${OMG.esc(s.misto || '')}" placeholder="např. kašna na Velkém náměstí"></div>
           <div class="pole cely"><label>ZADÁNÍ</label><textarea name="zadani">${OMG.esc(s.zadani || '')}</textarea></div>
           <div class="pole cely"><label>UZNÁVANÉ ODPOVĚDI (každá na nový řádek)</label><textarea name="odpovedi">${OMG.esc((s.odpovedi || []).join('\n'))}</textarea></div>
-          <div class="pole cely"><label>PAPAVILONOVA NÁPOVĚDA</label><textarea name="napoveda" style="min-height:60px">${OMG.esc(s.napoveda || '')}</textarea></div>
-          <div class="pole"><label>BODY</label><input type="number" name="body" value="${s.body ?? 100}"></div>
-          <div class="pole"><label>SRÁŽKA ZA NÁPOVĚDU</label><input type="number" name="srazka_napoveda" value="${s.srazka_napoveda ?? 20}"></div>
+          <div class="pole cely"><label>PAPAVILONOVA NÁPOVĚDA (tým si ji koupí za 40 Kč)</label><textarea name="napoveda" style="min-height:60px">${OMG.esc(s.napoveda || '')}</textarea></div>
           <div class="pole"><label>AUDIO (URL)</label><input name="audio_url" value="${OMG.esc(s.audio_url || '')}"></div>
           <div class="pole"><label>OBRÁZEK (URL)</label><input name="obrazek_url" value="${OMG.esc(s.obrazek_url || '')}"></div>
         </div>
         <label class="souhlas"><input type="checkbox" name="aktivni" ${s.aktivni !== false ? 'checked' : ''}><span>Viditelné pro hráče</span></label>
+        <label class="souhlas"><input type="checkbox" name="lze_preskocit" ${s.lze_preskocit !== false ? 'checked' : ''}><span>Po 5 pokusech jde přeskočit (u tajenky odškrtni)</span></label>
         <div class="radek-btn"><button class="btn mala" data-a="svetlo-uloz">Uložit světlo</button>${nove ? '' : '<button class="btn sec mala" data-a="svetlo-smaz">Smazat</button>'}</div>
       </div>
     </details>`;
@@ -282,7 +281,7 @@
       if (b.dataset.a === 'kap-uloz') { await api('kapitola.uloz', Object.assign({ id: kapId }, hodnoty(kap.querySelector(':scope > .form')))); toast('Kapitola uložena.'); await nacti(); }
       if (b.dataset.a === 'svetlo-nove') {
         const poradi = data.stanoviste.filter(s => s.kapitola_id === kapId).length + 1;
-        kap.querySelector('.svetla').insertAdjacentHTML('beforeend', poleSvetlo({ kapitola_id: kapId, poradi, typ: 'odpoved', body: 100, srazka_napoveda: 20, odpovedi: [], aktivni: true }));
+        kap.querySelector('.svetla').insertAdjacentHTML('beforeend', poleSvetlo({ kapitola_id: kapId, poradi, typ: 'odpoved', odpovedi: [], aktivni: true, lze_preskocit: true }));
       }
       if (b.dataset.a === 'svetlo-uloz') {
         const el = b.closest('.svetlo-ed');

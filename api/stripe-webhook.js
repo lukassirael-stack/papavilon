@@ -7,6 +7,7 @@
 
 import Stripe from 'stripe';
 import { ENV, HRA, supabase, siteUrl, oznacZaplaceno } from '../lib/spolecne.js';
+import { odemkniNapovedu } from '../lib/hra.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -38,6 +39,13 @@ export default async function handler(req, res) {
       const session = event.data.object;
       if (session.payment_status !== 'paid') return res.status(200).json({ received: true, ceka: true });
       if (session.metadata?.hra && session.metadata.hra !== HRA) return res.status(200).json({ received: true, jina_hra: true });
+
+      // koupená nápověda
+      if (session.metadata?.typ === 'napoveda') {
+        const stanovisteId = parseInt(session.metadata.stanoviste_id, 10);
+        if (session.metadata.tym_id && stanovisteId) await odemkniNapovedu({ tymId: session.metadata.tym_id, stanovisteId, platba: session.id, castka: Math.round((session.amount_total || 0) / 100) });
+        return res.status(200).json({ received: true, napoveda: true });
+      }
 
       let tymId = session.metadata?.tym_id || null;
       if (!tymId) {

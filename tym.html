@@ -17,7 +17,7 @@
 <body class="page">
 <header class="top">
   <a href="/"><img class="logo" src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
-  <nav><a href="/zebricek">Žebříček</a><a href="/pravidla">Pravidla</a></nav>
+  <nav><a href="/pravidla">Pravidla</a></nav>
 </header>
 
 <main id="main">
@@ -62,7 +62,7 @@
   <!-- registrace týmu -->
   <section id="registrace" class="skryt">
     <h2 class="zlata">Pojmenuj svůj tým</h2>
-    <p class="lead">Vstupenka platí. Teď vymysli jméno, které uvidí ostatní v žebříčku, a napiš, kdo s tebou vyráží.</p>
+    <p class="lead">Vstupenka platí. Teď vymysli jméno týmu a napiš, kdo s tebou vyráží.</p>
     <form class="card form" id="f-reg" novalidate>
       <div class="pole"><label for="nazev">JMÉNO TÝMU</label><input id="nazev" maxlength="40" required placeholder="např. Lucerny z Kotojed"></div>
       <div class="pole"><label>HRÁČI</label>
@@ -81,7 +81,6 @@
         <div class="jmeno" id="h-nazev"></div>
         <div id="h-admin" class="skryt" style="font-size:14px;color:var(--warn)">náhled správce — všechny kapitoly otevřené</div>
       </div>
-      <div class="body-box"><div><b id="h-body">0</b><span>bodů</span></div><div><b id="h-pozice">–</b><span>pořadí</span></div></div>
     </div>
     <div class="svicky" id="svicky"></div>
     <div id="kapitoly"></div>
@@ -91,7 +90,7 @@
 
 <footer>
   <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Kroměříž · <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
-  <div class="odkazy"><a href="/pravidla">Pravidla hry</a><a href="/zebricek">Žebříček</a><a href="/odkaz">Zapomenutý odkaz</a></div>
+  <div class="odkazy"><a href="/pravidla">Pravidla hry</a><a href="/odkaz">Zapomenutý odkaz</a></div>
 </footer>
 
 <script src="/web.js?v=20261109"></script>
@@ -144,8 +143,6 @@
   function vykresliHru() {
     const t = stav.tym, h = stav.hra;
     document.getElementById('h-nazev').textContent = t.nazev_tymu;
-    document.getElementById('h-body').textContent = t.body || 0;
-    document.getElementById('h-pozice').textContent = h.pozice ? h.pozice + '.' : '–';
     document.getElementById('h-admin').classList.toggle('skryt', !localStorage.getItem('omg_admin_key'));
 
     // svíčky
@@ -180,7 +177,7 @@
 
   function vykresliSvetlo(s) {
     if (s.stav === 'zamceno') return `<div class="svetlo zamceno">✦ ${s.poradi}. světlo se ukáže, až rozsvítíš předchozí.</div>`;
-    const hlava = `<h4>${s.poradi}. ${OMG.esc(s.nazev)}<span>${s.stav === 'vyreseno' ? `+${s.ziskano} b.` : (s.stav === 'preskoceno' ? 'přeskočeno' : `${s.body} b.`)}</span></h4>
+    const hlava = `<h4>${s.poradi}. ${OMG.esc(s.nazev)}</h4>
       ${s.misto ? `<div class="misto">📍 ${OMG.esc(s.misto)}</div>` : ''}`;
     if (s.stav === 'vyreseno' || s.stav === 'preskoceno') {
       return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="hotovo">${s.stav === 'vyreseno' ? '✓ Rozsvíceno' : '→ Přeskočeno'}${s.odpoved ? ` · ${s.typ === 'krystal' ? 'krystaly' : 'odpověď'}: <b>${OMG.esc(s.odpoved)}</b>` : ''}</div></div>`;
@@ -197,8 +194,8 @@
       ? `<div class="akce"><button class="btn mala" data-akce="hotovo" data-id="${s.id}">Pokračovat</button></div>`
       : `<div class="radek"><input type="text" id="odp-${s.id}" placeholder="tvoje odpověď" autocomplete="off" enterkeyhint="send"><button class="btn mala" data-akce="odpoved" data-id="${s.id}">Odeslat</button></div>
          <div class="akce">
-           ${s.ma_napovedu && !s.napoveda ? `<button class="btn sec mala" data-akce="napoveda" data-id="${s.id}">Papavilonova nápověda (−${s.srazka_napoveda} b.)</button>` : ''}
-           ${s.muze_preskocit ? `<button class="btn sec mala" data-akce="preskocit" data-id="${s.id}">Přeskočit (0 b.)</button>` : ''}
+           ${s.ma_napovedu && !s.napoveda ? `<button class="btn sec mala" data-akce="napoveda" data-id="${s.id}">Papavilonova nápověda · 40 Kč</button>` : ''}
+           ${s.muze_preskocit ? `<button class="btn sec mala" data-akce="preskocit" data-id="${s.id}">Přeskočit světlo</button>` : ''}
            ${s.pokusy ? `<span style="font-size:15px;color:#a99cc7">pokusů: ${s.pokusy}</span>` : ''}
          </div>`;
     return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}${nap}${akce}<div class="zprava" id="zpr-${s.id}"></div></div>`;
@@ -212,14 +209,15 @@
     const odpoved = vstup ? vstup.value.trim() : '';
     const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
     if (akce === 'odpoved' && !odpoved) { zprava(id, 'Napiš odpověď.', false); return; }
-    if (akce === 'napoveda' && !confirm('Papavilonova nápověda stojí pár bodů. Chceš ji?')) return;
-    if (akce === 'preskocit' && !confirm('Světlo přeskočíš bez bodů a půjdeš dál. Opravdu?')) return;
+    if (akce === 'napoveda' && !localStorage.getItem('omg_admin_key') && !confirm('Papavilonova nápověda stojí 40 Kč. Zaplatíš kartou a nápověda se ti hned ukáže. Pokračovat?')) return;
+    if (akce === 'preskocit' && !confirm('Světlo přeskočíš a půjdeš dál. Opravdu?')) return;
     b.disabled = true;
     try {
       const d = await OMG.api('/api/hra', { k, akce, stanoviste_id: id, odpoved, krystaly });
+      if (d.vysledek === 'platba' && d.url) { location.href = d.url; return; }
       stav.tym = d.tym; stav.hra = d.hra;
       vykresliHru();
-      if (d.vysledek === 'spravne') zprava(id, akce === 'krystaly' ? '✓ Krystaly zapsány. Na Štědrý den držte palce!' : `✓ Správně! +${d.body} bodů.`, true, true);
+      if (d.vysledek === 'spravne') zprava(id, akce === 'krystaly' ? '✓ Krystaly zapsány. Na Štědrý den držte palce!' : '✓ Správně! Světlo se rozsvítilo.', true, true);
       else if (d.vysledek === 'spatne') { zprava(id, 'Tohle to není. Zkus to znovu.', false); const v = document.getElementById('odp-' + id); if (v) { v.value = odpoved; v.focus(); } }
       else if (d.vysledek === 'napoveda') zprava(id, '', true);
     } catch (err) { zprava(id, err.message, false); b.disabled = false; }
@@ -256,7 +254,22 @@
     btn.disabled = false;
   });
 
-  nacti();
+  // návrat z platby za nápovědu
+  async function overNapovedu() {
+    const n = q.get('n'), sid = parseInt(q.get('s'), 10);
+    if (!n || !sid) return;
+    history.replaceState(null, '', '/tym?k=' + encodeURIComponent(k));
+    for (let i = 0; i < 4; i++) {
+      try {
+        const d = await OMG.api('/api/hra', { k, akce: 'napoveda_over', stanoviste_id: sid, n });
+        stav.tym = d.tym; stav.hra = d.hra; vykresliHru();
+        const el = document.getElementById('svetlo-' + sid); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      } catch (err) { if (i === 3) zprava(sid, err.message, false); await new Promise(r => setTimeout(r, 2500)); }
+    }
+  }
+
+  nacti().then(overNapovedu);
   // čekající platba převodem: zkontrolovat každou minutu
   setInterval(() => { if (stav && stav.tym && stav.tym.stav !== 'zaplaceno') nacti(); }, 60000);
 })();

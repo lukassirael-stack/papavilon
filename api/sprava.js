@@ -20,12 +20,14 @@ export default async function handler(req, res) {
 
       // ── přehled: čísla, týmy, obsah ─────────────────────────────
       case 'prehled': {
-        const [{ data: tymy }, { data: kapitoly }, { data: stanoviste }] = await Promise.all([
+        const [{ data: tymy }, { data: kapitoly }, { data: stanoviste }, { data: napovedy }] = await Promise.all([
           sb.from('omg_tymy').select('id, vs, email, platba, stav, castka, zaplaceno_at, nazev_tymu, pocet_hracu, vek_hracu, hraci, body, registrovano_at, created_at, poznamka, zdroj, odkaz_odeslan_at, token')
             .eq('hra', HRA).order('created_at', { ascending: false }).limit(1000),
           sb.from('omg_kapitoly').select('*').eq('hra', HRA).order('poradi'),
           sb.from('omg_stanoviste').select('*').order('kapitola_id').order('poradi'),
+          sb.from('omg_pokrok').select('napoveda_castka').not('napoveda_platba', 'is', null),
         ]);
+        const placene = (napovedy || []).filter((x) => (x.napoveda_castka || 0) > 0);
         const t = tymy || [];
         const od = await registraceOd();
         return res.status(200).json({
@@ -36,6 +38,8 @@ export default async function handler(req, res) {
             zaplaceno: t.filter((x) => x.stav === 'zaplaceno').length,
             registrovano: t.filter((x) => x.stav === 'zaplaceno' && x.nazev_tymu).length,
             trzba: t.filter((x) => x.stav === 'zaplaceno').reduce((s, x) => s + (x.castka || 0), 0),
+            napovedy: placene.length,
+            trzba_napovedy: placene.reduce((s, x) => s + (x.napoveda_castka || 0), 0),
           },
           tymy: t, kapitoly: kapitoly || [], stanoviste: stanoviste || [],
         });
@@ -120,8 +124,7 @@ export default async function handler(req, res) {
           typ: ['info', 'krystal'].includes(d.typ) ? d.typ : 'odpoved',
           nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null, napoveda: d.napoveda || null,
           audio_url: d.audio_url || null, obrazek_url: d.obrazek_url || null, odpovedi,
-          body: parseInt(d.body, 10) >= 0 ? parseInt(d.body, 10) : 100,
-          srazka_napoveda: parseInt(d.srazka_napoveda, 10) >= 0 ? parseInt(d.srazka_napoveda, 10) : 20,
+          lze_preskocit: d.lze_preskocit !== false,
           aktivni: d.aktivni !== false,
         };
         if (!z.kapitola_id) return res.status(400).json({ chyba: 'Chybí kapitola.' });
