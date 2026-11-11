@@ -195,7 +195,6 @@
       : `<div class="radek"><input type="text" id="odp-${s.id}" placeholder="tvoje odpověď" autocomplete="off" enterkeyhint="send"><button class="btn mala" data-akce="odpoved" data-id="${s.id}">Odeslat</button></div>
          <div class="akce">
            ${s.ma_napovedu && !s.napoveda ? `<button class="btn sec mala" data-akce="napoveda" data-id="${s.id}">Papavilonova nápověda · 40 Kč</button>` : ''}
-           ${s.muze_preskocit ? `<button class="btn sec mala" data-akce="preskocit" data-id="${s.id}">Přeskočit světlo</button>` : ''}
            ${s.pokusy ? `<span style="font-size:15px;color:#a99cc7">pokusů: ${s.pokusy}</span>` : ''}
          </div>`;
     return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}${nap}${akce}<div class="zprava" id="zpr-${s.id}"></div></div>`;
@@ -210,7 +209,6 @@
     const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
     if (akce === 'odpoved' && !odpoved) { zprava(id, 'Napiš odpověď.', false); return; }
     if (akce === 'napoveda' && !localStorage.getItem('omg_admin_key') && !confirm('Papavilonova nápověda stojí 40 Kč. Zaplatíš kartou a nápověda se ti hned ukáže. Pokračovat?')) return;
-    if (akce === 'preskocit' && !confirm('Světlo přeskočíš a půjdeš dál. Opravdu?')) return;
     b.disabled = true;
     try {
       const d = await OMG.api('/api/hra', { k, akce, stanoviste_id: id, odpoved, krystaly });

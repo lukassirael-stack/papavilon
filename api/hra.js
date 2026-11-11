@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════════════════
 //  /api/hra.js — herní akce týmu na stanovišti
-//  POST { k, akce: 'odpoved' | 'napoveda' | 'napoveda_over' | 'hotovo' | 'krystaly' | 'preskocit', stanoviste_id, odpoved?, n? }
+//  POST { k, akce: 'odpoved' | 'napoveda' | 'napoveda_over' | 'hotovo' | 'krystaly', stanoviste_id, odpoved?, n? }
 //  → { vysledek, hra: { kapitoly }, tym }   nápověda: { vysledek: 'platba', url } → Stripe (40 Kč)
 // ════════════════════════════════════════════════════════════════════
 
@@ -91,12 +91,6 @@ export default async function handler(req, res) {
       const v = await ulozKrystaly(tym, d.krystaly);
       if (v.chyba) return res.status(v.status).json({ chyba: v.chyba });
       return hotovo({ vyreseno_at: ted, body: 0, odpoved: v.hraci.map((h) => `${h.jmeno} ${h.krystal}`).join(', ') });
-    }
-
-    // ── přeskočit (po 5 pokusech; světlo s tajenkou se luští do konce) ──
-    if (d.akce === 'preskocit') {
-      if (!stan.muze_preskocit) return res.status(400).json({ chyba: 'Tohle světlo je potřeba rozluštit.' });
-      return hotovo({ vyreseno_at: ted, preskoceno: true, body: 0, odpoved: null });
     }
 
     // ── odpověď ───────────────────────────────────────────────────

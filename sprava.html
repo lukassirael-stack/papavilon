@@ -231,7 +231,7 @@
   function poleSvetlo(s) {
     const nove = !s.id;
     return `<details class="svetlo-ed" data-id="${s.id || ''}" ${nove ? 'open' : ''}>
-      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : s.typ === 'krystal' ? '💎 krystaly' : (s.lze_preskocit === false ? 'tajenka' : 'odpověď')}</span></summary>
+      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : s.typ === 'krystal' ? '💎 krystaly' : 'odpověď'}</span></summary>
       <div class="form">
         <div class="mriz">
           <div class="pole"><label>POŘADÍ</label><input type="number" name="poradi" value="${s.poradi}"></div>
@@ -245,7 +245,6 @@
           <div class="pole"><label>OBRÁZEK (URL)</label><input name="obrazek_url" value="${OMG.esc(s.obrazek_url || '')}"></div>
         </div>
         <label class="souhlas"><input type="checkbox" name="aktivni" ${s.aktivni !== false ? 'checked' : ''}><span>Viditelné pro hráče</span></label>
-        <label class="souhlas"><input type="checkbox" name="lze_preskocit" ${s.lze_preskocit !== false ? 'checked' : ''}><span>Po 5 pokusech jde přeskočit (u tajenky odškrtni)</span></label>
         <div class="radek-btn"><button class="btn mala" data-a="svetlo-uloz">Uložit světlo</button>${nove ? '' : '<button class="btn sec mala" data-a="svetlo-smaz">Smazat</button>'}</div>
       </div>
     </details>`;
@@ -281,7 +280,7 @@
       if (b.dataset.a === 'kap-uloz') { await api('kapitola.uloz', Object.assign({ id: kapId }, hodnoty(kap.querySelector(':scope > .form')))); toast('Kapitola uložena.'); await nacti(); }
       if (b.dataset.a === 'svetlo-nove') {
         const poradi = data.stanoviste.filter(s => s.kapitola_id === kapId).length + 1;
-        kap.querySelector('.svetla').insertAdjacentHTML('beforeend', poleSvetlo({ kapitola_id: kapId, poradi, typ: 'odpoved', odpovedi: [], aktivni: true, lze_preskocit: true }));
+        kap.querySelector('.svetla').insertAdjacentHTML('beforeend', poleSvetlo({ kapitola_id: kapId, poradi, typ: 'odpoved', odpovedi: [], aktivni: true }));
       }
       if (b.dataset.a === 'svetlo-uloz') {
         const el = b.closest('.svetlo-ed');

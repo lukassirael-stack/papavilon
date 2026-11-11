@@ -124,7 +124,6 @@ export default async function handler(req, res) {
           typ: ['info', 'krystal'].includes(d.typ) ? d.typ : 'odpoved',
           nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null, napoveda: d.napoveda || null,
           audio_url: d.audio_url || null, obrazek_url: d.obrazek_url || null, odpovedi,
-          lze_preskocit: d.lze_preskocit !== false,
           aktivni: d.aktivni !== false,
         };
         if (!z.kapitola_id) return res.status(400).json({ chyba: 'Chybí kapitola.' });
