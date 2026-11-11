@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       // ── přehled: čísla, týmy, obsah ─────────────────────────────
       case 'prehled': {
         const [{ data: tymy }, { data: kapitoly }, { data: stanoviste }] = await Promise.all([
-          sb.from('omg_tymy').select('id, vs, email, platba, stav, castka, zaplaceno_at, nazev_tymu, pocet_hracu, vek_hracu, body, registrovano_at, created_at, poznamka, zdroj, odkaz_odeslan_at, token')
+          sb.from('omg_tymy').select('id, vs, email, platba, stav, castka, zaplaceno_at, nazev_tymu, pocet_hracu, vek_hracu, hraci, body, registrovano_at, created_at, poznamka, zdroj, odkaz_odeslan_at, token')
             .eq('hra', HRA).order('created_at', { ascending: false }).limit(1000),
           sb.from('omg_kapitoly').select('*').eq('hra', HRA).order('poradi'),
           sb.from('omg_stanoviste').select('*').order('kapitola_id').order('poradi'),
@@ -53,6 +53,18 @@ export default async function handler(req, res) {
         return res.status(200).json({ uspech: true, registrace_od: od.toISOString(), otevreno: Date.now() >= od.getTime() });
       }
 
+      // ── losovací čísla: hráči s krystalem + čísla zdarma ────────
+      case 'losovani': {
+        const [{ data: tymy }, { data: zdarma }] = await Promise.all([
+          sb.from('omg_tymy').select('nazev_tymu, email, hraci').eq('hra', HRA).eq('stav', 'zaplaceno').not('nazev_tymu', 'is', null),
+          sb.from('omg_los_zdarma').select('id, jmeno, email, created_at').eq('hra', HRA).order('id'),
+        ]);
+        const radky = [];
+        for (const t of tymy || []) for (const h of t.hraci || []) if (h.krystal) radky.push({ cislo: h.krystal, jmeno: h.jmeno, vek: h.vek, tym: t.nazev_tymu, email: t.email, zdroj: 'krystal' });
+        for (const z of zdarma || []) radky.push({ cislo: `Z-${z.id}`, jmeno: z.jmeno, vek: null, tym: '', email: z.email, zdroj: 'zdarma' });
+        return res.status(200).json({ radky });
+      }
+
       // ── týmy ────────────────────────────────────────────────────
       case 'tymy.zaplaceno': {
         const { tym, novePotvrzeno } = await oznacZaplaceno({ tymId: d.id, site, zdroj: 'sprava' });
@@ -78,7 +90,7 @@ export default async function handler(req, res) {
         const email = String(d.email || '').trim().toLowerCase();
         if (!jeEmail(email)) return res.status(400).json({ chyba: 'Zadej platný e-mail.' });
         const { data: tym, error } = await sb.from('omg_tymy').insert({
-          hra: HRA, email, castka: d.castka === 0 ? 0 : CENA, platba: 'prevod', souhlas: true,
+          hra: HRA, email, castka: d.castka === 0 ? 0 : CENA, pocet_hracu: 4, platba: 'prevod', souhlas: true,
           zdroj: 'sprava', poznamka: String(d.poznamka || 'založeno ve správě').substring(0, 500),
         }).select('*').single();
         if (error) { console.error(error); return res.status(500).json({ chyba: 'Založení se nepovedlo.' }); }

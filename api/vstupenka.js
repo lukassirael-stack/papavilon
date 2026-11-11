@@ -7,7 +7,7 @@
 
 import Stripe from 'stripe';
 import {
-  CENA, HRA, NAZEV_HRY, ENV, UCET, supabase, cors, siteUrl, jeEmail,
+  CENA, HRA, NAZEV_HRY, cenaZa, pocetHracu, ENV, UCET, supabase, cors, siteUrl, jeEmail,
   registraceOtevrena, generujSPAYD, qrUrl, emailPlatbaPrevodem, emailAdmin,
 } from '../lib/spolecne.js';
 
@@ -19,6 +19,8 @@ export default async function handler(req, res) {
     const d = req.body || {};
     const email  = String(d.email || '').trim().toLowerCase();
     const platba = d.platba === 'prevod' ? 'prevod' : 'stripe';
+    const pocet  = pocetHracu(d.pocet);
+    const castka = cenaZa(pocet);
 
     if (!(await registraceOtevrena(d.beta))) return res.status(403).json({ chyba: 'Prodej vstupenek se teprve otevře. Sleduj hlavní stránku.' });
     if (!jeEmail(email))            return res.status(400).json({ chyba: 'Zadej platný e-mail, tam ti přijde odkaz do hry.' });
@@ -26,7 +28,7 @@ export default async function handler(req, res) {
 
     const sb = supabase();
     const { data: tym, error } = await sb.from('omg_tymy').insert({
-      hra: HRA, email, castka: CENA, platba, souhlas: true,
+      hra: HRA, email, castka, pocet_hracu: pocet, platba, souhlas: true,
       zdroj: d.zdroj ? String(d.zdroj).substring(0, 200) : null,
     }).select('*').single();
     if (error) { console.error('Supabase insert:', error); return res.status(500).json({ chyba: 'Vstupenku se nepodařilo založit. Zkus to prosím za chvíli.' }); }
@@ -45,9 +47,9 @@ export default async function handler(req, res) {
           quantity: 1,
           price_data: {
             currency: 'czk',
-            unit_amount: CENA * 100,
+            unit_amount: castka * 100,
             product_data: {
-              name: `${NAZEV_HRY} — vstupenka pro tým`,
+              name: `${NAZEV_HRY} — vstupenka pro tým (${pocet} ${pocet === 1 ? 'hráč' : pocet < 5 ? 'hráči' : 'hráčů'})`,
               description: 'Celý advent, čtyři kapitoly, Papavilonův hlas a hra o Papavilonův kouzelný artefakt.',
             },
           },
@@ -62,13 +64,13 @@ export default async function handler(req, res) {
     }
 
     // ── Převod na účet (QR) ─────────────────────────────────────────
-    const spayd = generujSPAYD({ castka: CENA, vs: tym.vs, zprava: `Vanocni jizda ${tym.vs}` });
+    const spayd = generujSPAYD({ castka, vs: tym.vs, zprava: `Vanocni jizda ${tym.vs}` });
     await Promise.allSettled([
       emailPlatbaPrevodem({ tym, spayd }),
-      emailAdmin({ predmet: 'Nová objednávka převodem — Vánoční jízda', radky: [['E-mail', email], ['VS', tym.vs], ['Částka', `${CENA} Kč`]] }),
+      emailAdmin({ predmet: 'Nová objednávka převodem — Vánoční jízda', radky: [['E-mail', email], ['VS', tym.vs], ['Hráčů', pocet], ['Částka', `${castka} Kč`]] }),
     ]);
     return res.status(200).json({
-      uspech: true, platba: 'prevod', vs: tym.vs, castka: CENA, spayd, qr: qrUrl(spayd), token: tym.token,
+      uspech: true, platba: 'prevod', vs: tym.vs, castka, pocet, spayd, qr: qrUrl(spayd), token: tym.token,
       ucet: { ucet: UCET.ucet, iban: UCET.iban, banka: UCET.banka, prijemce: UCET.prijemceZobrazit, zprava: `Vanocni jizda ${tym.vs}` },
     });
   } catch (err) {

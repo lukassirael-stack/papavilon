@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://papavilon.cz/vstupenka">
 <meta property="og:site_name" content="Papavilon · Outdoor Magic Games">
 <meta property="og:title" content="Vstupenka — Velká Vánoční jízda 2026">
-<meta property="og:description" content="Jedna vstupenka za 300 Kč pro celý tým a celý advent. Kartou nebo QR převodem, odkaz do hry přijde e-mailem.">
+<meta property="og:description" content="Vstupenka pro tým až 4 hráčů za 300 Kč na celý advent, 5. a 6. hráč +80 Kč. Kartou nebo QR převodem, odkaz do hry přijde e-mailem.">
 <meta property="og:image" content="https://papavilon.cz/img/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261109c">
+<link rel="stylesheet" href="/styl.css?v=20261111">
 </head>
 <body class="page">
 <header class="top">
@@ -44,12 +44,20 @@
 
   <!-- formulář -->
   <section id="formular" class="skryt">
-    <p class="lead">Jedna vstupenka za <b style="color:var(--gold)">300 Kč</b> platí pro celý tým a všechny čtyři kapitoly. Po zaplacení přijde e-mail s odkazem do hry, kde tým pojmenuješ.</p>
+    <p class="lead">Vstupenka za <b style="color:var(--gold)">300 Kč</b> platí pro tým až 4 hráčů a všechny čtyři kapitoly. 5. a 6. hráč za 80 Kč. Každý hráč si v čajovně vybere svůj krystal. Po zaplacení přijde e-mail s odkazem do hry, kde tým pojmenuješ.</p>
     <div id="zruseno" class="alert info skryt" style="margin-bottom:16px">Platba se nedokončila. Můžeš to zkusit znovu, nebo zvolit převod.</div>
     <form class="card form" id="f" novalidate>
       <div class="pole">
         <label for="email">E-MAIL</label>
         <input type="email" id="email" name="email" required autocomplete="email" inputmode="email" placeholder="na tenhle e-mail přijde odkaz do hry">
+      </div>
+      <div class="pole">
+        <label for="pocet">POČET HRÁČŮ</label>
+        <select id="pocet" name="pocet">
+          <option value="1">1 hráč</option><option value="2">2 hráči</option><option value="3">3 hráči</option>
+          <option value="4" selected>4 hráči</option><option value="5">5 hráčů (+80 Kč)</option><option value="6">6 hráčů (+160 Kč)</option>
+        </select>
+        <div class="pozn">Celkem <b id="cena" style="color:var(--gold)">300 Kč</b> za tým na celý advent.</div>
       </div>
       <div class="pole">
         <label>PLATBA</label>
@@ -81,10 +89,10 @@
   <section id="prevod" class="skryt">
     <div class="card">
       <p class="stred" style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:.06em">Vstupenka je založená</p>
-      <p class="stred">Zaplať <b style="color:var(--gold)">300 Kč</b> převodem. Jakmile platba dorazí, přijde ti e-mail s odkazem do hry. Stejné údaje máš teď i v e-mailu.</p>
+      <p class="stred">Zaplať <b style="color:var(--gold)" id="p-castka2">300 Kč</b> převodem. Jakmile platba dorazí, přijde ti e-mail s odkazem do hry. Stejné údaje máš teď i v e-mailu.</p>
       <img class="qr" id="qr" alt="QR platba">
       <table class="tab">
-        <tr><td>Částka</td><td><b>300 Kč</b></td></tr>
+        <tr><td>Částka</td><td><b id="p-castka">300 Kč</b></td></tr>
         <tr><td>Variabilní symbol</td><td><b id="p-vs"></b></td></tr>
         <tr><td>Číslo účtu</td><td id="p-ucet"></td></tr>
         <tr><td>IBAN</td><td id="p-iban" style="word-break:break-all"></td></tr>
@@ -117,6 +125,8 @@
   });
   if (q.get('zruseno')) document.getElementById('zruseno').classList.remove('skryt');
 
+  const cenaZa = (n) => 300 + Math.max(0, n - 4) * 80;
+  document.getElementById('pocet').addEventListener('change', (e) => { const c = cenaZa(+e.target.value); document.getElementById('cena').textContent = c + ' Kč'; document.getElementById('odeslat').textContent = 'Pokračovat k platbě · ' + c + ' Kč'; });
   const f = document.getElementById('f'), btn = document.getElementById('odeslat'), chyba = document.getElementById('chyba');
   const ukazChybu = (t) => { chyba.textContent = t; chyba.classList.toggle('skryt', !t); };
 
@@ -127,10 +137,11 @@
     if (!f.souhlas.checked) return ukazChybu('Potvrď prosím souhlas s pravidly hry.');
     btn.disabled = true; btn.textContent = 'Chviličku…';
     try {
-      const d = await OMG.api('/api/vstupenka', { email, platba: f.platba.value, zdroj: f.zdroj.value, souhlas: true, beta });
+      const d = await OMG.api('/api/vstupenka', { email, pocet: f.pocet.value, platba: f.platba.value, zdroj: f.zdroj.value, souhlas: true, beta });
       if (d.url) { location.href = d.url; return; }
       document.getElementById('qr').src = d.qr;
       document.getElementById('p-vs').textContent = d.vs;
+      document.getElementById('p-castka').textContent = d.castka + ' Kč'; document.getElementById('p-castka2').textContent = d.castka + ' Kč';
       document.getElementById('p-ucet').textContent = d.ucet.ucet;
       document.getElementById('p-iban').textContent = d.ucet.iban;
       document.getElementById('p-prijemce').textContent = d.ucet.prijemce;

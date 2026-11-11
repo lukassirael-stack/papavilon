@@ -4,7 +4,7 @@
 //  POST { k, nazev_tymu, pocet_hracu, vek_hracu } → pojmenování týmu
 // ════════════════════════════════════════════════════════════════════
 
-import { CENA, UCET, supabase, cors, jeAdmin, verejnyTym, generujSPAYD, qrUrl } from '../lib/spolecne.js';
+import { CENA, HRACU_V_CENE, UCET, supabase, cors, jeAdmin, verejnyTym, generujSPAYD, qrUrl } from '../lib/spolecne.js';
 import { stavHry } from '../lib/hra.js';
 
 async function nactiTym(token) {
@@ -40,15 +40,48 @@ export default async function handler(req, res) {
       if (!tym) return res.status(404).json({ chyba: 'Tenhle odkaz neznáme.' });
       if (tym.stav !== 'zaplaceno') return res.status(403).json({ chyba: 'Tým pojmenuješ, jakmile dorazí platba.' });
 
-      const nazev = String(d.nazev_tymu || '').trim().replace(/\s+/g, ' ');
-      const pocet = parseInt(d.pocet_hracu, 10);
-      const vek   = String(d.vek_hracu || '').trim().substring(0, 120);
-      if (nazev.length < 2 || nazev.length > 40) return res.status(400).json({ chyba: 'Jméno týmu má mít 2 až 40 znaků.' });
-      if (!(pocet >= 1 && pocet <= 20))          return res.status(400).json({ chyba: 'Zadej počet hráčů (1 až 20).' });
-      if (!vek)                                   return res.status(400).json({ chyba: 'Napiš věk hráčů, třeba „8, 11, 40“.' });
+      const db = supabase();
+      const maxHracu = tym.pocet_hracu || HRACU_V_CENE;
 
-      const { data: upd, error } = await supabase().from('omg_tymy')
-        .update({ nazev_tymu: nazev, pocet_hracu: pocet, vek_hracu: vek, registrovano_at: tym.registrovano_at || new Date().toISOString() })
+      // ── zápis čísel krystalů z čajovny (po registraci) ──────────
+      if (d.akce === 'krystaly') {
+        if (!tym.nazev_tymu) return res.status(400).json({ chyba: 'Nejdřív pojmenuj tým.' });
+        const hraci = Array.isArray(tym.hraci) ? tym.hraci.map((h) => ({ ...h })) : [];
+        const cisla = Array.isArray(d.krystaly) ? d.krystaly : [];
+        hraci.forEach((h, i) => {
+          const c = String(cisla[i] ?? '').trim().replace(/\s+/g, '').substring(0, 12);
+          h.krystal = c || null;
+        });
+        const moje = hraci.map((h) => h.krystal).filter(Boolean);
+        if (new Set(moje).size !== moje.length) return res.status(400).json({ chyba: 'Každý krystal má jiné číslo, zkontroluj prosím zápis.' });
+        if (moje.length) {
+          const { data: ostatni } = await db.from('omg_tymy').select('id, hraci').eq('hra', tym.hra).neq('id', tym.id);
+          const obsazena = new Set((ostatni || []).flatMap((t) => (t.hraci || []).map((h) => h.krystal).filter(Boolean)));
+          const kolize = moje.find((c) => obsazena.has(c));
+          if (kolize) return res.status(409).json({ chyba: `Krystal č. ${kolize} už má zapsaný jiný tým. Zkontroluj číslo, případně se ozvi v čajovně.` });
+        }
+        const { data: upd2, error: e2 } = await db.from('omg_tymy').update({ hraci }).eq('id', tym.id).select('*').single();
+        if (e2) { console.error('krystaly:', e2); return res.status(500).json({ chyba: 'Uložení se nepovedlo, zkus to prosím znovu.' }); }
+        return res.status(200).json({ uspech: true, tym: verejnyTym(upd2), hra: await stavHry(upd2, { admin: jeAdmin(req) }) });
+      }
+
+      // ── registrace týmu: jméno + hráči (jméno a věk) ────────────
+      const nazev = String(d.nazev_tymu || '').trim().replace(/\s+/g, ' ');
+      if (nazev.length < 2 || nazev.length > 40) return res.status(400).json({ chyba: 'Jméno týmu má mít 2 až 40 znaků.' });
+      const vstup = (Array.isArray(d.hraci) ? d.hraci : [])
+        .map((h) => ({ jmeno: String(h?.jmeno || '').trim().replace(/\s+/g, ' ').substring(0, 40), vek: parseInt(h?.vek, 10) }))
+        .filter((h) => h.jmeno || h.vek);
+      if (!vstup.length) return res.status(400).json({ chyba: 'Napiš aspoň jednoho hráče se jménem a věkem.' });
+      if (vstup.length > maxHracu) return res.status(400).json({ chyba: `Vstupenka platí pro ${maxHracu} ${maxHracu < 5 ? 'hráče' : 'hráčů'}.` });
+      for (const h of vstup) {
+        if (h.jmeno.length < 1) return res.status(400).json({ chyba: 'U každého hráče doplň jméno.' });
+        if (!(h.vek >= 1 && h.vek <= 110)) return res.status(400).json({ chyba: `U hráče ${h.jmeno} doplň věk.` });
+      }
+      const puvodni = Array.isArray(tym.hraci) ? tym.hraci : [];
+      const hraci = vstup.map((h, i) => ({ jmeno: h.jmeno, vek: h.vek, krystal: puvodni[i]?.krystal || null }));
+
+      const { data: upd, error } = await db.from('omg_tymy')
+        .update({ nazev_tymu: nazev, hraci, vek_hracu: hraci.map((h) => `${h.jmeno} ${h.vek}`).join(', '), registrovano_at: tym.registrovano_at || new Date().toISOString() })
         .eq('id', tym.id).select('*').single();
       if (error) {
         if (error.code === '23505') return res.status(409).json({ chyba: 'Tohle jméno už má jiný tým. Zkus jiné, třeba s přívlastkem.' });

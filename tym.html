@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261109c">
+<link rel="stylesheet" href="/styl.css?v=20261111">
 </head>
 <body class="page">
 <header class="top">
@@ -65,8 +65,10 @@
     <p class="lead">Vstupenka platí. Teď vymysli jméno, které uvidí ostatní v žebříčku, a napiš, kdo s tebou vyráží.</p>
     <form class="card form" id="f-reg" novalidate>
       <div class="pole"><label for="nazev">JMÉNO TÝMU</label><input id="nazev" maxlength="40" required placeholder="např. Lucerny z Kotojed"></div>
-      <div class="pole"><label for="pocet">POČET HRÁČŮ</label><input id="pocet" type="number" min="1" max="20" inputmode="numeric" required placeholder="kolik vás vyráží"></div>
-      <div class="pole"><label for="vek">VĚK HRÁČŮ</label><input id="vek" maxlength="120" required placeholder="např. 7, 10, 38 a 41"><div class="pozn">Pomůže nám ladit úkoly pro malé Hledače i dospělé Mistry.</div></div>
+      <div class="pole"><label>HRÁČI</label>
+        <div id="hraci-reg" class="hraci-reg"></div>
+        <div class="pozn" id="hraci-pozn">Jméno a věk každého hráče. Věk nám pomáhá ladit úkoly pro malé Hledače i dospělé Mistry.</div>
+      </div>
       <div id="reg-chyba" class="alert chyba skryt"></div>
       <button class="btn plna" type="submit" id="reg-btn">Vstoupit do hry</button>
     </form>
@@ -83,6 +85,17 @@
     </div>
     <div class="svicky" id="svicky"></div>
     <div id="kapitoly"></div>
+    <details class="kap" id="krystaly-box">
+      <summary><div><h3>Krystaly z čajovny<small>číslo každého krystalu = los na Štědrý den</small></h3></div><div class="stav-kap" id="krystaly-stav"></div></summary>
+      <div class="telo">
+        <p class="uvod">Až vás tajenka dovede do čajovny Na Radosti, každý hráč si vybere svůj krystal. Zapiš sem číslo, které je u krystalu. S ním jde hráč do štědrovečerního losování.</p>
+        <form id="f-krystaly" class="form" novalidate>
+          <div id="krystaly-pole" class="hraci-reg"></div>
+          <div id="kr-zprava" class="zprava"></div>
+          <button class="btn mala" type="submit" id="kr-btn">Uložit čísla krystalů</button>
+        </form>
+      </div>
+    </details>
     <p class="stred" style="margin-top:22px;font-size:16px;color:#a99cc7">Ulož si tuto stránku do telefonu. Hraješ kdykoli až do 24. 12.</p>
   </section>
 </main>
@@ -134,7 +147,7 @@
       }
       return;
     }
-    if (!t.registrovano) return ukaz('registrace');
+    if (!t.registrovano) { pripravRegistraci(t); return ukaz('registrace'); }
     ukaz('hra');
     vykresliHru();
   }
@@ -146,6 +159,7 @@
     document.getElementById('h-pozice').textContent = h.pozice ? h.pozice + '.' : '–';
     document.getElementById('h-admin').classList.toggle('skryt', !localStorage.getItem('omg_admin_key'));
 
+    vykresliKrystaly();
     // svíčky
     document.getElementById('svicky').innerHTML = h.kapitoly.map((kp, i) => {
       const barva = kp.poradi === 3 ? '#d9a5e8' : '#7a3fd0';
@@ -225,13 +239,45 @@
     el.className = 'zprava ' + (ok ? 'ok' : 'ne'); el.textContent = text;
   }
 
+  // registrace týmu: řádky pro hráče podle zaplaceného počtu
+  function pripravRegistraci(t) {
+    const box = document.getElementById('hraci-reg'); if (box.dataset.hotovo) return;
+    const max = t.max_hracu || 4;
+    box.innerHTML = Array.from({ length: max }, (_, i) => `<div class="hrac"><span class="h-c">${i + 1}.</span><input class="h-jmeno" maxlength="40" placeholder="${i === 0 ? 'jméno (povinné)' : 'jméno'}" autocomplete="off"><input class="h-vek" type="number" min="1" max="110" inputmode="numeric" placeholder="věk"></div>`).join('');
+    document.getElementById('hraci-pozn').textContent = `Vstupenka platí až pro ${max} ${max < 5 ? 'hráče' : 'hráčů'}. U každého, kdo jde hrát, napiš jméno a věk. Prázdné řádky nevadí.`;
+    box.dataset.hotovo = '1';
+  }
+
+  // krystaly z čajovny
+  function vykresliKrystaly() {
+    const hraci = stav.tym.hraci || [];
+    const box = document.getElementById('krystaly-pole');
+    box.innerHTML = hraci.map((h, i) => `<div class="hrac"><span class="h-c">${i + 1}.</span><span class="h-jm">${OMG.esc(h.jmeno)} <small>(${h.vek})</small></span><input class="h-kr" maxlength="12" inputmode="numeric" placeholder="číslo" value="${OMG.esc(h.krystal || '')}"></div>`).join('');
+    const n = hraci.filter((h) => h.krystal).length;
+    document.getElementById('krystaly-stav').textContent = hraci.length ? `${n} / ${hraci.length} zapsáno` : '';
+  }
+  document.getElementById('f-krystaly').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const z = document.getElementById('kr-zprava'), btn = document.getElementById('kr-btn');
+    btn.disabled = true; z.textContent = '';
+    try {
+      const krystaly = [...document.querySelectorAll('#krystaly-pole .h-kr')].map((i) => i.value);
+      const d = await OMG.api('/api/tym', { k, akce: 'krystaly', krystaly });
+      stav.tym = d.tym; stav.hra = d.hra; vykresliHru();
+      document.getElementById('krystaly-box').open = true;
+      const z2 = document.getElementById('kr-zprava'); z2.className = 'zprava ok'; z2.textContent = '✓ Uloženo. Papavilon vaše krystaly zná.';
+    } catch (err) { z.className = 'zprava ne'; z.textContent = err.message; }
+    btn.disabled = false;
+  });
+
   // registrace týmu
   document.getElementById('f-reg').addEventListener('submit', async (e) => {
     e.preventDefault();
     const ch = document.getElementById('reg-chyba'), btn = document.getElementById('reg-btn');
     ch.classList.add('skryt'); btn.disabled = true;
     try {
-      const d = await OMG.api('/api/tym', { k, nazev_tymu: document.getElementById('nazev').value, pocet_hracu: document.getElementById('pocet').value, vek_hracu: document.getElementById('vek').value });
+      const hraci = [...document.querySelectorAll('#hraci-reg .hrac')].map((r) => ({ jmeno: r.querySelector('.h-jmeno').value, vek: r.querySelector('.h-vek').value }));
+      const d = await OMG.api('/api/tym', { k, nazev_tymu: document.getElementById('nazev').value, hraci });
       stav.tym = d.tym; stav.hra = d.hra; vykresli(); window.scrollTo(0, 0);
     } catch (err) { ch.textContent = err.message; ch.classList.remove('skryt'); }
     btn.disabled = false;

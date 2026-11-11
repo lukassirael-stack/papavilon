@@ -332,3 +332,12 @@ footer .odkazy{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;m
 .zeb td:first-child{font-family:'Cinzel',serif;color:var(--gold);width:46px}
 .zeb td:last-child,.zeb th:last-child{text-align:right}
 .zeb tr.ja td{background:rgba(90,40,170,.35)}
+
+/* hráči: registrace a krystaly */
+.hraci-reg{display:grid;gap:8px}
+.hraci-reg .hrac{display:grid;grid-template-columns:26px 1fr 84px;gap:8px;align-items:center}
+.hraci-reg .h-c{font-family:'Cinzel',serif;color:var(--gold);text-align:right}
+.hraci-reg input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(246,198,106,.4);background:rgba(10,12,50,.7);color:var(--ink);font-family:inherit;font-size:18px}
+.hraci-reg .h-jm{font-size:18px;color:#efe2c8}
+.hraci-reg .h-jm small{color:#a99cc7}
+.hraci-reg .h-kr{text-align:center}

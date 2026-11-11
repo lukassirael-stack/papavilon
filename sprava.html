@@ -10,7 +10,7 @@
 <title>Správa — Velká Vánoční jízda</title>
 <meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261109c">
+<link rel="stylesheet" href="/styl.css?v=20261111">
 <style>
 .page main{max-width:1100px}
 .taby{display:flex;gap:8px;justify-content:center;margin:0 0 20px;flex-wrap:wrap}
@@ -70,7 +70,7 @@
   </section>
 
   <section id="obsah" class="skryt">
-    <div class="taby"><button class="akt" data-tab="tymy">Týmy</button><button data-tab="hra">Obsah hry</button></div>
+    <div class="taby"><button class="akt" data-tab="tymy">Týmy</button><button data-tab="hra">Obsah hry</button><button data-tab="los">Losování</button></div>
 
     <!-- TÝMY -->
     <div id="tab-tymy">
@@ -113,6 +113,13 @@
       <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Odpovědi piš každou na nový řádek. Porovnává se bez diakritiky, velikosti písmen a interpunkce, takže „Masaryk“ = „masaryk“ = „MASARYK“. Světla se hráčům ukazují postupně v pořadí.</p>
       <div id="kapitoly"></div>
     </div>
+
+    <!-- LOSOVÁNÍ -->
+    <div id="tab-los" class="skryt">
+      <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Všechna čísla do štědrovečerního losování: krystaly hráčů (zapisují si je týmy ve hře) a čísla zdarma ze stránky /los.</p>
+      <div class="radek-btn" style="margin-bottom:12px"><button class="btn mala" id="los-nacti">Načíst</button><button class="btn sec mala" id="los-csv">Stáhnout CSV</button><button class="btn sec mala" id="los-tah">Vylosovat jedno číslo</button><span id="los-vysledek" style="font-size:18px;color:var(--gold)"></span></div>
+      <div class="card" style="padding:12px"><table class="zeb" id="los-tab"><tbody><tr><td colspan="5">Klikni na Načíst.</td></tr></tbody></table></div>
+    </div>
   </section>
 </main>
 <div class="toast" id="toast"></div>
@@ -136,7 +143,7 @@
   $('#odhlasit').addEventListener('click', (e) => { e.preventDefault(); localStorage.removeItem('omg_admin_key'); location.reload(); });
   document.querySelectorAll('.taby button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.taby button').forEach(x => x.classList.toggle('akt', x === b));
-    $('#tab-tymy').classList.toggle('skryt', b.dataset.tab !== 'tymy'); $('#tab-hra').classList.toggle('skryt', b.dataset.tab !== 'hra');
+    $('#tab-tymy').classList.toggle('skryt', b.dataset.tab !== 'tymy'); $('#tab-hra').classList.toggle('skryt', b.dataset.tab !== 'hra'); $('#tab-los').classList.toggle('skryt', b.dataset.tab !== 'los'); if (b.dataset.tab === 'los') nactiLos();
   }));
   document.querySelectorAll('.filtry button').forEach(b => b.addEventListener('click', () => { filtr = b.dataset.f; document.querySelectorAll('.filtry button').forEach(x => x.classList.toggle('akt', x === b)); vykresliTymy(); }));
   $('#hledat').addEventListener('input', (e) => { hled = e.target.value.trim().toLowerCase(); vykresliTymy(); });
@@ -175,7 +182,7 @@
         <div>
           <div class="hl">${t.nazev_tymu ? `<b>${OMG.esc(t.nazev_tymu)}</b> · ` : ''}${OMG.esc(t.email)} <span class="st ${t.stav === 'zaplaceno' ? 'zap' : (t.stav === 'zruseno' ? 'zrus' : 'ceka')}">${t.stav === 'zaplaceno' ? 'zaplaceno' : (t.stav === 'zruseno' ? 'zrušeno' : 'čeká na platbu')}</span></div>
           <div class="det">VS ${t.vs} · ${t.platba === 'stripe' ? 'karta' : 'převod'} · ${t.castka} Kč · založeno ${fmt(t.created_at)}${t.zaplaceno_at ? ` · zaplaceno ${fmt(t.zaplaceno_at)}` : ''}
-            ${t.nazev_tymu ? `<br>${t.pocet_hracu} hráčů, věk ${OMG.esc(t.vek_hracu || '')} · ${t.body} b.` : ''}${t.zdroj ? ` · zdroj: ${OMG.esc(t.zdroj)}` : ''}${t.poznamka ? `<br>✎ ${OMG.esc(t.poznamka)}` : ''}</div>
+            ${t.nazev_tymu ? `<br>${(t.hraci && t.hraci.length) ? t.hraci.map(h => `${OMG.esc(h.jmeno)} (${h.vek})${h.krystal ? ` 💎${OMG.esc(h.krystal)}` : ''}`).join(', ') : OMG.esc(t.vek_hracu || '')} · ${t.body} b.` : ''}${t.pocet_hracu ? ` · vstupenka pro ${t.pocet_hracu}` : ''}${t.zdroj ? ` · zdroj: ${OMG.esc(t.zdroj)}` : ''}${t.poznamka ? `<br>✎ ${OMG.esc(t.poznamka)}` : ''}</div>
         </div>
         <div class="akce">
           ${t.stav === 'ceka_platbu' ? `<button class="hlavni" data-a="zaplaceno">Označit zaplaceno</button><button data-a="zrusit">Zrušit</button>` : ''}
@@ -244,6 +251,27 @@
       </div>
     </details>`;
   }
+  // ── losování ──────────────────────────────────────────────
+  let losRadky = [];
+  async function nactiLos() {
+    try {
+      losRadky = (await api('losovani')).radky || [];
+      $('#los-tab').innerHTML = '<thead><tr><th>Číslo</th><th>Jméno</th><th>Věk</th><th>Tým</th><th>Zdroj</th></tr></thead><tbody>' +
+        (losRadky.length ? losRadky.map(r => `<tr><td>${OMG.esc(r.cislo)}</td><td>${OMG.esc(r.jmeno)}</td><td>${r.vek ?? ''}</td><td>${OMG.esc(r.tym)}</td><td>${r.zdroj === 'krystal' ? 'krystal' : 'zdarma'}</td></tr>`).join('') : '<tr><td colspan="5">Zatím žádná čísla.</td></tr>') + '</tbody>';
+      $('#los-vysledek').textContent = `${losRadky.length} čísel`;
+    } catch (e) { alert(e.message); }
+  }
+  $('#los-nacti').addEventListener('click', nactiLos);
+  $('#los-csv').addEventListener('click', () => {
+    const csv = 'cislo;jmeno;vek;tym;email;zdroj\n' + losRadky.map(r => [r.cislo, r.jmeno, r.vek ?? '', r.tym, r.email, r.zdroj].map(v => String(v).replace(/;/g, ',')).join(';')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' })); a.download = 'losovani-vanocni-jizda.csv'; a.click();
+  });
+  $('#los-tah').addEventListener('click', () => {
+    if (!losRadky.length) return alert('Nejdřív načti čísla.');
+    const r = losRadky[crypto.getRandomValues(new Uint32Array(1))[0] % losRadky.length];
+    $('#los-vysledek').textContent = `✦ ${r.cislo} — ${r.jmeno}${r.tym ? ` (${r.tym})` : ''}`;
+  });
+
   function vykresliObsah() { $('#kapitoly').innerHTML = data.kapitoly.map(poleKap).join(''); }
   const hodnoty = (root) => { const o = {}; root.querySelectorAll('[name]').forEach(el => { o[el.name] = el.type === 'checkbox' ? el.checked : el.value; }); return o; };
 
