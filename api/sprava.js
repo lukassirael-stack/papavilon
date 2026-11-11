@@ -55,13 +55,9 @@ export default async function handler(req, res) {
 
       // ── losovací čísla: hráči s krystalem + čísla zdarma ────────
       case 'losovani': {
-        const [{ data: tymy }, { data: zdarma }] = await Promise.all([
-          sb.from('omg_tymy').select('nazev_tymu, email, hraci').eq('hra', HRA).eq('stav', 'zaplaceno').not('nazev_tymu', 'is', null),
-          sb.from('omg_los_zdarma').select('id, jmeno, email, created_at').eq('hra', HRA).order('id'),
-        ]);
+        const { data: tymy } = await sb.from('omg_tymy').select('nazev_tymu, email, hraci').eq('hra', HRA).eq('stav', 'zaplaceno').not('nazev_tymu', 'is', null);
         const radky = [];
         for (const t of tymy || []) for (const h of t.hraci || []) if (h.krystal) radky.push({ cislo: h.krystal, jmeno: h.jmeno, vek: h.vek, tym: t.nazev_tymu, email: t.email, zdroj: 'krystal' });
-        for (const z of zdarma || []) radky.push({ cislo: `Z-${z.id}`, jmeno: z.jmeno, vek: null, tym: '', email: z.email, zdroj: 'zdarma' });
         return res.status(200).json({ radky });
       }
 
@@ -121,7 +117,7 @@ export default async function handler(req, res) {
           : String(d.odpovedi || '').split(/[\n;|]+/).map((s) => s.trim()).filter(Boolean);
         const z = {
           kapitola_id: parseInt(d.kapitola_id, 10), poradi: parseInt(d.poradi, 10) || 1,
-          typ: d.typ === 'info' ? 'info' : 'odpoved',
+          typ: ['info', 'krystal'].includes(d.typ) ? d.typ : 'odpoved',
           nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null, napoveda: d.napoveda || null,
           audio_url: d.audio_url || null, obrazek_url: d.obrazek_url || null, odpovedi,
           body: parseInt(d.body, 10) >= 0 ? parseInt(d.body, 10) : 100,

@@ -5,7 +5,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { supabase, cors, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
-import { stavHry } from '../lib/hra.js';
+import { stavHry, ulozKrystaly } from '../lib/hra.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -60,6 +60,14 @@ export default async function handler(req, res) {
       return hotovo({ vyreseno_at: ted, body: plne.body || 0, odpoved: null });
     }
 
+    // ── světlo „krystal“: tým zapíše čísla krystalů svých hráčů ───
+    if (d.akce === 'krystaly') {
+      if (plne.typ !== 'krystal') return res.status(400).json({ chyba: 'Tady se krystaly nezapisují.' });
+      const v = await ulozKrystaly(tym, d.krystaly);
+      if (v.chyba) return res.status(v.status).json({ chyba: v.chyba });
+      return hotovo({ vyreseno_at: ted, body: plne.body || 0, odpoved: v.hraci.map((h) => `${h.jmeno} ${h.krystal}`).join(', ') });
+    }
+
     // ── přeskočit (po 5 pokusech s nápovědou) ─────────────────────
     if (d.akce === 'preskocit') {
       if (!stan.muze_preskocit) return res.status(400).json({ chyba: 'Přeskočit půjde po pěti pokusech s nápovědou.' });
@@ -68,7 +76,7 @@ export default async function handler(req, res) {
 
     // ── odpověď ───────────────────────────────────────────────────
     if (d.akce === 'odpoved') {
-      if (plne.typ !== 'odpoved') return res.status(400).json({ chyba: 'Tady stačí pokračovat.' });
+      if (plne.typ !== 'odpoved') return res.status(400).json({ chyba: 'Tady se odpověď nezapisuje.' });
       const odpoved = String(d.odpoved || '').trim().substring(0, 200);
       if (!normalizuj(odpoved)) return res.status(400).json({ chyba: 'Napiš odpověď.' });
 

@@ -6,7 +6,7 @@ const DB = {
   omg_los_zdarma: [],
   nastaveni: [{ klic: 'omg_registrace_od', hodnota: '2026-11-27T00:00:00+01:00' }],
 };
-let vsSeq = 26120001, kapSeq = 1, stanSeq = 1, pokusSeq = 1;
+let vsSeq = 26120001, kapSeq = 1, stanSeq = 100, pokusSeq = 1;
 const PK = { omg_tymy: ['id'], omg_kapitoly: ['id'], omg_stanoviste: ['id'], omg_pokrok: ['tym_id', 'stanoviste_id'], omg_pokusy: ['id'], nastaveni: ['klic'], omg_los_zdarma: ['id'] };
 
 function defaults(table, row) {

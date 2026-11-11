@@ -116,7 +116,7 @@
 
     <!-- LOSOVÁNÍ -->
     <div id="tab-los" class="skryt">
-      <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Všechna čísla do štědrovečerního losování: krystaly hráčů (zapisují si je týmy ve hře) a čísla zdarma ze stránky /los.</p>
+      <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Všechna čísla krystalů do štědrovečerního losování. Týmy je zapisují ve hře na světle typu „Krystaly“.</p>
       <div class="radek-btn" style="margin-bottom:12px"><button class="btn mala" id="los-nacti">Načíst</button><button class="btn sec mala" id="los-csv">Stáhnout CSV</button><button class="btn sec mala" id="los-tah">Vylosovat jedno číslo</button><span id="los-vysledek" style="font-size:18px;color:var(--gold)"></span></div>
       <div class="card" style="padding:12px"><table class="zeb" id="los-tab"><tbody><tr><td colspan="5">Klikni na Načíst.</td></tr></tbody></table></div>
     </div>
@@ -231,11 +231,11 @@
   function poleSvetlo(s) {
     const nove = !s.id;
     return `<details class="svetlo-ed" data-id="${s.id || ''}" ${nove ? 'open' : ''}>
-      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : `${s.body} b.`}</span></summary>
+      <summary><span><b>${s.poradi}.</b> ${OMG.esc(s.nazev || 'Nové světlo')} ${s.aktivni === false ? '<span class="st zrus">skryté</span>' : ''}</span><span style="color:#cdbfa6;font-size:15px">${s.typ === 'info' ? 'info' : s.typ === 'krystal' ? '💎 krystaly' : `${s.body} b.`}</span></summary>
       <div class="form">
         <div class="mriz">
           <div class="pole"><label>POŘADÍ</label><input type="number" name="poradi" value="${s.poradi}"></div>
-          <div class="pole"><label>TYP</label><select name="typ"><option value="odpoved" ${s.typ !== 'info' ? 'selected' : ''}>Odpověď (tajenka, heslo…)</option><option value="info" ${s.typ === 'info' ? 'selected' : ''}>Jen přečíst / poslechnout</option></select></div>
+          <div class="pole"><label>TYP</label><select name="typ"><option value="odpoved" ${s.typ !== 'info' ? 'selected' : ''}>Odpověď (tajenka, heslo…)</option><option value="info" ${s.typ === 'info' ? 'selected' : ''}>Jen přečíst / poslechnout</option><option value="krystal" ${s.typ === 'krystal' ? 'selected' : ''}>Krystaly — hráči zapíšou čísla svých krystalů</option></select></div>
           <div class="pole"><label>NÁZEV SVĚTLA</label><input name="nazev" value="${OMG.esc(s.nazev || '')}"></div>
           <div class="pole"><label>MÍSTO (kam jít)</label><input name="misto" value="${OMG.esc(s.misto || '')}" placeholder="např. kašna na Velkém náměstí"></div>
           <div class="pole cely"><label>ZADÁNÍ</label><textarea name="zadani">${OMG.esc(s.zadani || '')}</textarea></div>
@@ -257,7 +257,7 @@
     try {
       losRadky = (await api('losovani')).radky || [];
       $('#los-tab').innerHTML = '<thead><tr><th>Číslo</th><th>Jméno</th><th>Věk</th><th>Tým</th><th>Zdroj</th></tr></thead><tbody>' +
-        (losRadky.length ? losRadky.map(r => `<tr><td>${OMG.esc(r.cislo)}</td><td>${OMG.esc(r.jmeno)}</td><td>${r.vek ?? ''}</td><td>${OMG.esc(r.tym)}</td><td>${r.zdroj === 'krystal' ? 'krystal' : 'zdarma'}</td></tr>`).join('') : '<tr><td colspan="5">Zatím žádná čísla.</td></tr>') + '</tbody>';
+        (losRadky.length ? losRadky.map(r => `<tr><td>${OMG.esc(r.cislo)}</td><td>${OMG.esc(r.jmeno)}</td><td>${r.vek ?? ''}</td><td>${OMG.esc(r.tym)}</td><td>krystal</td></tr>`).join('') : '<tr><td colspan="5">Zatím žádná čísla.</td></tr>') + '</tbody>';
       $('#los-vysledek').textContent = `${losRadky.length} čísel`;
     } catch (e) { alert(e.message); }
   }

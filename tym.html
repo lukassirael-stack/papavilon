@@ -85,17 +85,6 @@
     </div>
     <div class="svicky" id="svicky"></div>
     <div id="kapitoly"></div>
-    <details class="kap" id="krystaly-box">
-      <summary><div><h3>Krystaly z čajovny<small>číslo každého krystalu = los na Štědrý den</small></h3></div><div class="stav-kap" id="krystaly-stav"></div></summary>
-      <div class="telo">
-        <p class="uvod">Až vás tajenka dovede do čajovny Na Radosti, každý hráč si vybere svůj krystal. Zapiš sem číslo, které je u krystalu. S ním jde hráč do štědrovečerního losování.</p>
-        <form id="f-krystaly" class="form" novalidate>
-          <div id="krystaly-pole" class="hraci-reg"></div>
-          <div id="kr-zprava" class="zprava"></div>
-          <button class="btn mala" type="submit" id="kr-btn">Uložit čísla krystalů</button>
-        </form>
-      </div>
-    </details>
     <p class="stred" style="margin-top:22px;font-size:16px;color:#a99cc7">Ulož si tuto stránku do telefonu. Hraješ kdykoli až do 24. 12.</p>
   </section>
 </main>
@@ -159,7 +148,6 @@
     document.getElementById('h-pozice').textContent = h.pozice ? h.pozice + '.' : '–';
     document.getElementById('h-admin').classList.toggle('skryt', !localStorage.getItem('omg_admin_key'));
 
-    vykresliKrystaly();
     // svíčky
     document.getElementById('svicky').innerHTML = h.kapitoly.map((kp, i) => {
       const barva = kp.poradi === 3 ? '#d9a5e8' : '#7a3fd0';
@@ -195,10 +183,16 @@
     const hlava = `<h4>${s.poradi}. ${OMG.esc(s.nazev)}<span>${s.stav === 'vyreseno' ? `+${s.ziskano} b.` : (s.stav === 'preskoceno' ? 'přeskočeno' : `${s.body} b.`)}</span></h4>
       ${s.misto ? `<div class="misto">📍 ${OMG.esc(s.misto)}</div>` : ''}`;
     if (s.stav === 'vyreseno' || s.stav === 'preskoceno') {
-      return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="hotovo">${s.stav === 'vyreseno' ? '✓ Rozsvíceno' : '→ Přeskočeno'}${s.odpoved ? ` · odpověď: <b>${OMG.esc(s.odpoved)}</b>` : ''}</div></div>`;
+      return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="hotovo">${s.stav === 'vyreseno' ? '✓ Rozsvíceno' : '→ Přeskočeno'}${s.odpoved ? ` · ${s.typ === 'krystal' ? 'krystaly' : 'odpověď'}: <b>${OMG.esc(s.odpoved)}</b>` : ''}</div></div>`;
     }
     const media = `${s.obrazek_url ? `<img src="${OMG.esc(s.obrazek_url)}" alt="" loading="lazy">` : ''}${s.audio_url ? `<audio controls preload="none" src="${OMG.esc(s.audio_url)}"></audio>` : ''}`;
     const nap = s.napoveda ? `<div class="nap">🕯️ Papavilon radí: ${OMG.esc(s.napoveda)}</div>` : '';
+    if (s.typ === 'krystal') {
+      const hraci = stav.tym.hraci || [];
+      return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}
+        <div class="hraci-reg" style="margin-top:14px">${hraci.map((h, i) => `<div class="hrac"><span class="h-c">${i + 1}.</span><span class="h-jm">${OMG.esc(h.jmeno)} <small>(${h.vek})</small></span><input class="h-kr" maxlength="12" inputmode="numeric" placeholder="číslo" value="${OMG.esc(h.krystal || '')}"></div>`).join('')}</div>
+        <div class="akce"><button class="btn mala" data-akce="krystaly" data-id="${s.id}">Zapsat krystaly</button></div><div class="zprava" id="zpr-${s.id}"></div></div>`;
+    }
     const akce = s.typ === 'info'
       ? `<div class="akce"><button class="btn mala" data-akce="hotovo" data-id="${s.id}">Pokračovat</button></div>`
       : `<div class="radek"><input type="text" id="odp-${s.id}" placeholder="tvoje odpověď" autocomplete="off" enterkeyhint="send"><button class="btn mala" data-akce="odpoved" data-id="${s.id}">Odeslat</button></div>
@@ -216,15 +210,16 @@
     const id = +b.dataset.id, akce = b.dataset.akce;
     const vstup = document.getElementById('odp-' + id);
     const odpoved = vstup ? vstup.value.trim() : '';
+    const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
     if (akce === 'odpoved' && !odpoved) { zprava(id, 'Napiš odpověď.', false); return; }
     if (akce === 'napoveda' && !confirm('Papavilonova nápověda stojí pár bodů. Chceš ji?')) return;
     if (akce === 'preskocit' && !confirm('Světlo přeskočíš bez bodů a půjdeš dál. Opravdu?')) return;
     b.disabled = true;
     try {
-      const d = await OMG.api('/api/hra', { k, akce, stanoviste_id: id, odpoved });
+      const d = await OMG.api('/api/hra', { k, akce, stanoviste_id: id, odpoved, krystaly });
       stav.tym = d.tym; stav.hra = d.hra;
       vykresliHru();
-      if (d.vysledek === 'spravne') zprava(id, `✓ Správně! +${d.body} bodů.`, true, true);
+      if (d.vysledek === 'spravne') zprava(id, akce === 'krystaly' ? '✓ Krystaly zapsány. Na Štědrý den držte palce!' : `✓ Správně! +${d.body} bodů.`, true, true);
       else if (d.vysledek === 'spatne') { zprava(id, 'Tohle to není. Zkus to znovu.', false); const v = document.getElementById('odp-' + id); if (v) { v.value = odpoved; v.focus(); } }
       else if (d.vysledek === 'napoveda') zprava(id, '', true);
     } catch (err) { zprava(id, err.message, false); b.disabled = false; }
@@ -247,28 +242,6 @@
     document.getElementById('hraci-pozn').textContent = `Vstupenka platí až pro ${max} ${max < 5 ? 'hráče' : 'hráčů'}. U každého, kdo jde hrát, napiš jméno a věk. Prázdné řádky nevadí.`;
     box.dataset.hotovo = '1';
   }
-
-  // krystaly z čajovny
-  function vykresliKrystaly() {
-    const hraci = stav.tym.hraci || [];
-    const box = document.getElementById('krystaly-pole');
-    box.innerHTML = hraci.map((h, i) => `<div class="hrac"><span class="h-c">${i + 1}.</span><span class="h-jm">${OMG.esc(h.jmeno)} <small>(${h.vek})</small></span><input class="h-kr" maxlength="12" inputmode="numeric" placeholder="číslo" value="${OMG.esc(h.krystal || '')}"></div>`).join('');
-    const n = hraci.filter((h) => h.krystal).length;
-    document.getElementById('krystaly-stav').textContent = hraci.length ? `${n} / ${hraci.length} zapsáno` : '';
-  }
-  document.getElementById('f-krystaly').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const z = document.getElementById('kr-zprava'), btn = document.getElementById('kr-btn');
-    btn.disabled = true; z.textContent = '';
-    try {
-      const krystaly = [...document.querySelectorAll('#krystaly-pole .h-kr')].map((i) => i.value);
-      const d = await OMG.api('/api/tym', { k, akce: 'krystaly', krystaly });
-      stav.tym = d.tym; stav.hra = d.hra; vykresliHru();
-      document.getElementById('krystaly-box').open = true;
-      const z2 = document.getElementById('kr-zprava'); z2.className = 'zprava ok'; z2.textContent = '✓ Uloženo. Papavilon vaše krystaly zná.';
-    } catch (err) { z.className = 'zprava ne'; z.textContent = err.message; }
-    btn.disabled = false;
-  });
 
   // registrace týmu
   document.getElementById('f-reg').addEventListener('submit', async (e) => {

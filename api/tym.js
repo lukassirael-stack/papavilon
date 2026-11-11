@@ -43,28 +43,6 @@ export default async function handler(req, res) {
       const db = supabase();
       const maxHracu = tym.pocet_hracu || HRACU_V_CENE;
 
-      // ── zápis čísel krystalů z čajovny (po registraci) ──────────
-      if (d.akce === 'krystaly') {
-        if (!tym.nazev_tymu) return res.status(400).json({ chyba: 'Nejdřív pojmenuj tým.' });
-        const hraci = Array.isArray(tym.hraci) ? tym.hraci.map((h) => ({ ...h })) : [];
-        const cisla = Array.isArray(d.krystaly) ? d.krystaly : [];
-        hraci.forEach((h, i) => {
-          const c = String(cisla[i] ?? '').trim().replace(/\s+/g, '').substring(0, 12);
-          h.krystal = c || null;
-        });
-        const moje = hraci.map((h) => h.krystal).filter(Boolean);
-        if (new Set(moje).size !== moje.length) return res.status(400).json({ chyba: 'Každý krystal má jiné číslo, zkontroluj prosím zápis.' });
-        if (moje.length) {
-          const { data: ostatni } = await db.from('omg_tymy').select('id, hraci').eq('hra', tym.hra).neq('id', tym.id);
-          const obsazena = new Set((ostatni || []).flatMap((t) => (t.hraci || []).map((h) => h.krystal).filter(Boolean)));
-          const kolize = moje.find((c) => obsazena.has(c));
-          if (kolize) return res.status(409).json({ chyba: `Krystal č. ${kolize} už má zapsaný jiný tým. Zkontroluj číslo, případně se ozvi v čajovně.` });
-        }
-        const { data: upd2, error: e2 } = await db.from('omg_tymy').update({ hraci }).eq('id', tym.id).select('*').single();
-        if (e2) { console.error('krystaly:', e2); return res.status(500).json({ chyba: 'Uložení se nepovedlo, zkus to prosím znovu.' }); }
-        return res.status(200).json({ uspech: true, tym: verejnyTym(upd2), hra: await stavHry(upd2, { admin: jeAdmin(req) }) });
-      }
-
       // ── registrace týmu: jméno + hráči (jméno a věk) ────────────
       const nazev = String(d.nazev_tymu || '').trim().replace(/\s+/g, ' ');
       if (nazev.length < 2 || nazev.length > 40) return res.status(400).json({ chyba: 'Jméno týmu má mít 2 až 40 znaků.' });
