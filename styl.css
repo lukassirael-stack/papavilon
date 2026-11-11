@@ -155,7 +155,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 .final b{font-family:'Cinzel',serif;color:var(--gold)}
 
 .prices{grid-template-columns:1fr;max-width:520px;margin:0 auto}
-.price .amt{font-family:'Cinzel',serif;font-size:52px;color:var(--gold);margin:8px 0 2px}
+.price .amt{font-family:'Cinzel',serif;font-size:35px;color:var(--gold);margin:8px 0 2px}
 .price .per{font-size:17px;color:#cdbfa6;margin-bottom:16px}
 .price ul{list-style:none;text-align:left;display:grid;gap:9px;font-size:18px;color:#efe2c8}
 .price li{padding-left:28px;position:relative}
