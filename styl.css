@@ -390,9 +390,13 @@ button.pis.vybrane{outline:3px solid #fff;outline-offset:3px;transform:translate
 .pis-ovl .btn{flex:1}
 .btn[disabled]{opacity:.45;cursor:default;box-shadow:none}
 .pis-pozn{margin-top:8px;font-size:16px;line-height:1.35;color:#cdbfa6}
-.svetlo .pis-stin{margin-top:12px}
-.svetlo .pis-stin input{min-width:0;width:100%}
-.svetlo .pis-stin .btn{flex:none}
+.pismena .pis-stin{display:flex;gap:10px;margin-top:12px;align-items:center}
+.pismena .pis-stin input{flex:1;min-width:0;width:100%;max-width:140px;padding:12px 14px;border-radius:12px;border:1px solid rgba(246,198,106,.4);background:rgba(10,12,50,.7);color:var(--ink);outline:none;
+  text-transform:uppercase;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:22px;letter-spacing:.06em}
+.pismena .pis-stin input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(246,198,106,.2)}
+.pismena .pis-stin input::placeholder{text-transform:none;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:19px;letter-spacing:0}
+.pismena .pis-stin .btn{flex:none}
+.pis-ovl{max-width:420px}
 .pismena.taj{margin-top:14px}
 .taj-popis{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.16em;color:var(--gold2);margin-top:16px}
 .taj-nahled{margin-top:6px;font-family:'Cinzel',serif;font-weight:700;font-size:clamp(24px,7vw,34px);letter-spacing:.14em;color:var(--gold);min-height:1.3em;word-break:break-word;white-space:pre-wrap;text-shadow:0 0 18px rgba(255,190,80,.45)}
