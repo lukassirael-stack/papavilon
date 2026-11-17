@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117h">
+<link rel="stylesheet" href="/styl.css?v=20261117i">
 </head>
 <body class="page">
 <header class="top">
@@ -249,7 +249,7 @@
     const sviti = new Set((kp.stanoviste || []).flatMap(s => s.znameni || []).filter(z => z.stav === 'sviti').map(z => z.pismeno));
     const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((p, i) => `<div class="${sviti.has(p) ? 'sviti' : ''}"><b>${p}</b><span>${i + 1}</span></div>`).join('');
     return `<details class="panel abeceda" data-kap="${kp.id}" ${abcZavrene.has(kp.id) ? '' : 'open'}><summary class="panel-stitek">PAPAVILONOVA ABECEDA<svg viewBox="0 0 20 12" aria-hidden="true"><path d="M2 2l8 8 8-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
-        <p>Číslo, které najdete, převeďte na písmeno a zapište ho ke znamení.</p>
+        <p>Vyhledejte tu číslo, které vám u znamení vyšlo. Písmeno nad ním zapište do políčka u znamení.</p>
         <div class="abc">${abc}</div></details>`;
   }
 
@@ -275,7 +275,8 @@
   }
 
   function vykresliZnameni(s, jen) {
-    return `<div class="znameni">${(s.znameni || []).filter(z => !jen || z.stav === jen).map(z => {
+    const navod = !jen && (s.znameni || []).some(z => z.stav === 'ceka') ? '<button type="button" class="zn-navod" data-abeceda="1"><b>Jak na to:</b> číslo, které vám vyjde, vyhledejte dole v Papavilonově abecedě. Písmeno nad ním zapište sem do políčka. <u>Ukázat abecedu ↓</u></button>' : '';
+    return `<div class="znameni">${navod}${(s.znameni || []).filter(z => !jen || z.stav === jen).map(z => {
       const tecky = z.stav === 'ceka' ? `<div class="tecky" role="img" aria-label="${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}">${'<i></i>'.repeat(z.zbyva)}${'<i class="pryc"></i>'.repeat(3 - z.zbyva)}</div>` : '';
       const telo = z.stav === 'ceka'
         ? `<div class="radek"><input type="text" class="zn-vstup" id="odp-${s.id}-${z.id}" aria-label="písmeno" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="send" maxlength="3"><button class="btn rozzarit" data-akce="znameni" data-id="${s.id}" data-z="${z.id}">Rozzářit</button>${tecky}</div>`
@@ -367,6 +368,12 @@
       else if (d.vysledek === 'spatne' && b.dataset.taj) zprava(id, 'Tahle slova Papavilon ještě nepoznává. Zkus písmena přeskládat.', false);
       else if (d.vysledek === 'spatne') { zprava(id, 'Tohle to není. Zkus to znovu.', false); const v = document.getElementById('odp-' + id); if (v) { v.value = odpoved; v.focus(); } }
     } catch (err) { zprava(id, err.message, false); b.disabled = false; }
+  });
+  // odkaz z úkolu na Papavilonovu abecedu
+  document.getElementById('kapitoly').addEventListener('click', (e) => {
+    if (!e.target.closest('[data-abeceda]')) return;
+    const a = document.querySelector('details.abeceda'); if (!a) return;
+    a.open = true; a.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
   // skládání tajenky: výběr dlaždice, posun doleva/doprava, doplnění písmene ze stínu
   document.getElementById('kapitoly').addEventListener('click', (e) => {
