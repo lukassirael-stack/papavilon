@@ -268,9 +268,9 @@
 
   // skryté písmeno po třech pokusech: Papavilon ho rozzáří za dobrý skutek
   function skutekKarta(s, z) {
-    const hlava = '<div class="zn-stav stin"><b>Tři pokusy jsou vyčerpané a písmeno zůstalo skryté.</b> Papavilon ho rozzáří za dobrý skutek.</div>';
-    if (!z.skutek) return `${hlava}<div class="akce"><button class="btn mala" data-akce="skutek_vyber" data-id="${s.id}" data-z="${z.id}">Chci dobrý skutek</button></div>`;
-    return `${hlava}<div class="skutek"><div class="sk-nadpis">VÁŠ DOBRÝ SKUTEK</div><div class="sk-text">${OMG.esc(z.skutek)}</div>
+    const hlava = '<div class="zn-stav stin"><b>Tři pokusy jsou vyčerpané a písmeno zůstalo skryté.</b> Papavilon ho rozzáří za vánoční dobrý skutek.</div>';
+    if (!z.skutek) return `${hlava}<div class="akce"><button class="btn mala" data-akce="skutek_vyber" data-id="${s.id}" data-z="${z.id}">Chci vánoční dobrý skutek</button></div>`;
+    return `${hlava}<div class="skutek"><div class="sk-nadpis">VÁŠ VÁNOČNÍ DOBRÝ SKUTEK</div><div class="sk-text">${OMG.esc(z.skutek)}</div>
       <div class="sk-kdo">Vyberte jednoho z týmu, kdo skutek udělá. Střihněte si o to kámen, nůžky, papír!</div>
       <textarea id="sk-${s.id}-${z.id}" maxlength="300" placeholder="Jednou větou napište, co jste udělali."></textarea>
       <div class="akce"><button class="btn mala" data-akce="skutek_hotovo" data-id="${s.id}" data-z="${z.id}">Skutek je hotový</button><button class="btn sec mala" data-akce="skutek_vyber" data-jiny="1" data-id="${s.id}" data-z="${z.id}">Vylosovat jiný</button></div></div>`;
@@ -282,7 +282,7 @@
   }
 
   function vykresliZnameni(s, jen) {
-    const navod = !jen && (s.znameni || []).some(z => z.stav === 'ceka') ? '<button type="button" class="zn-navod" data-abeceda="1"><b>Jak na to:</b> číslo, které vám vyjde, vyhledejte dole v Papavilonově abecedě. Písmeno nad ním zapište sem do políčka. <u>Ukázat abecedu ↓</u></button>' : '';
+    const navod = !jen && (s.znameni || []).some(z => z.stav === 'ceka') ? '<button type="button" class="zn-navod" data-abeceda="1"><b>Jak na to:</b> číslo, které vám vyjde, vyhledejte dole v Papavilonově abecedě. Písmeno nad ním zapište sem do políčka. Máte tři pokusy, pak písmeno rozzáří vánoční dobrý skutek. <u>Ukázat abecedu ↓</u></button>' : '';
     return `<div class="znameni">${navod}${(s.znameni || []).filter(z => !jen || z.stav === jen).map(z => {
       const tecky = z.stav === 'ceka' ? `<div class="tecky" role="img" aria-label="${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}">${'<i></i>'.repeat(z.zbyva)}${'<i class="pryc"></i>'.repeat(3 - z.zbyva)}</div>` : '';
       const telo = z.stav === 'ceka'
@@ -300,7 +300,7 @@
     const obnov = s.typ === 'znameni' && jeSpravce() ? `<div class="akce"><button class="btn sec mala" data-akce="znameni_obnov" data-id="${s.id}">Vrátit pokusy (správce)</button></div>` : '';
     if (s.typ === 'znameni' && (s.stav === 'vyreseno' || s.stav === 'preskoceno')) {
       const vse = (s.znameni || []).every(z => z.stav === 'sviti');
-      return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="pis-rada">${(s.znameni || []).map(z => dlazdice(z, `pd-${s.id}-${z.id}`)).join('')}</div><div class="hotovo">${vse ? '✓ Rozsvíceno, všechna písmena svítí' : '✓ Světlo svítí. Skryté písmeno ✧ rozzáří dobrý skutek.'}</div>${vse ? '' : vykresliZnameni(s, 'stin')}${obnov}<div class="zprava" id="zpr-${s.id}"></div></div>`;
+      return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="pis-rada">${(s.znameni || []).map(z => dlazdice(z, `pd-${s.id}-${z.id}`)).join('')}</div><div class="hotovo">${vse ? '✓ Rozsvíceno, všechna písmena svítí' : '✓ Světlo svítí. Skryté písmeno ✧ rozzáří vánoční dobrý skutek.'}</div>${vse ? '' : vykresliZnameni(s, 'stin')}${obnov}<div class="zprava" id="zpr-${s.id}"></div></div>`;
     }
     if (s.stav === 'vyreseno' || s.stav === 'preskoceno') {
       return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="hotovo">${s.stav === 'vyreseno' ? '✓ Rozsvíceno' : '→ Přeskočeno'}${s.odpoved ? ` · ${s.typ === 'krystal' ? 'krystaly' : 'odpověď'}: <b>${OMG.esc(s.odpoved)}</b>` : ''}</div></div>`;
@@ -357,7 +357,7 @@
       if (akce === 'znameni') {
         const zz = id + '-' + zid, el = document.getElementById('zn-' + zz), dl = document.getElementById('pd-' + zz);
         if (d.vysledek === 'sviti') { if (dl) dl.classList.add('nove'); if (el) zprava(zz, 'Písmeno se rozzářilo!', true); else zprava(id, 'Písmeno se rozzářilo a světlo svítí!', true, true); }
-        else if (d.vysledek === 'stin') zprava(zz, 'To byl třetí pokus. Písmeno zůstává skryté a čeká na dobrý skutek.', false);
+        else if (d.vysledek === 'stin') zprava(zz, 'To byl třetí pokus. Písmeno zůstává skryté a čeká na váš vánoční dobrý skutek.', false);
         else if (d.vysledek === 'spatne') { zprava(zz, d.zbyva === 1 ? 'Znamení ještě spí. Zbývá poslední pokus, rozmyslete ho dobře.' : `Znamení ještě spí. Zbývají ${d.zbyva} pokusy, přepočítejte to pozorně.`, false); const v = document.getElementById('odp-' + zz); if (v) v.focus(); }
         else if (d.vysledek === 'opakovani') { zprava(zz, 'Tohle písmeno jste už zkoušeli. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); } }
         else if (d.vysledek === 'cislo' || d.vysledek === 'jedno') { zprava(zz, d.vysledek === 'cislo' ? 'Sem patří písmeno. Najděte ho ke svému číslu v Papavilonově abecedě a zapište ho. Pokus vám zůstává.' : 'Zapište jedno písmeno. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); v.select(); } }
