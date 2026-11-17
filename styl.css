@@ -632,3 +632,14 @@ body.bez-posunu{overflow:hidden}
 .oslava-jiskry i:nth-child(4n){background:radial-gradient(circle,#fff,#e8dcff 60%,transparent 70%)}
 @keyframes pad{to{transform:translateY(105vh) translateX(24px);opacity:.2}}
 @media (prefers-reduced-motion:reduce){.oslava-papavilon,.oslava-jiskry i,.oslava-slova,.pos-cast.nova{animation:none}}
+
+/* návod „Jak se hraje“ přímo ve hře */
+body.rezim-hra .jak{margin-top:32px;padding:24px 16px 14px}
+body.rezim-hra .jak summary.panel-stitek{position:absolute;list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:6px 22px;line-height:1.35}
+body.rezim-hra .jak summary::-webkit-details-marker{display:none}
+body.rezim-hra .jak summary svg{width:15px;height:9px;transition:transform .2s}
+body.rezim-hra .jak:not([open]) summary svg{transform:rotate(-90deg)}
+body.rezim-hra .jak:not([open]){padding:14px 16px 0;border-color:rgba(242,196,99,.55);background:rgba(52,28,88,.55);box-shadow:none}
+body.rezim-hra .jak ol{margin:0;padding-left:22px;font-size:17px;line-height:1.4;color:#f1e6cf}
+body.rezim-hra .jak li{margin-top:9px}
+body.rezim-hra .jak li b{color:#ffe08a}
