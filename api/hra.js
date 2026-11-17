@@ -1,12 +1,11 @@
 // ════════════════════════════════════════════════════════════════════
 //  /api/hra.js — herní akce týmu na stanovišti
-//  POST { k, akce: 'odpoved' | 'znameni' | 'znameni_obnov' | 'napoveda' | 'napoveda_over' | 'hotovo' | 'krystaly', stanoviste_id, znameni_id?, odpoved?, n? }
-//  → { vysledek, hra: { kapitoly }, tym }   nápověda: { vysledek: 'platba', url } → Stripe (40 Kč)
+//  POST { k, akce: 'odpoved' | 'znameni' | 'znameni_obnov' | 'skutek_vyber' | 'skutek_hotovo' | 'hotovo' | 'krystaly', stanoviste_id, znameni_id?, odpoved?, n? }
+//  → { vysledek, hra: { kapitoly }, tym }
 // ════════════════════════════════════════════════════════════════════
 
-import Stripe from 'stripe';
-import { ENV, HRA, NAZEV_HRY, CENA_NAPOVEDY, supabase, cors, siteUrl, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
-import { stavHry, ulozKrystaly, odemkniNapovedu, POKUSU_NA_ZNAMENI } from '../lib/hra.js';
+import { supabase, cors, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
+import { stavHry, ulozKrystaly, seznamSkutku, POKUSU_NA_ZNAMENI } from '../lib/hra.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -37,54 +36,56 @@ export default async function handler(req, res) {
       await sb.from('omg_pokrok').update({ znameni: {}, pokusy: 0, vyreseno_at: null, odpoved: null }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
       return res.status(200).json({ vysledek: 'obnoveno', hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
     }
-    if (stan.stav === 'vyreseno' || stan.stav === 'preskoceno') return res.status(200).json({ vysledek: 'hotovo', hra, tym: verejnyTym(tym) });
-    if (stan.stav !== 'otevreno') return res.status(403).json({ chyba: 'Nejdřív vyřeš předchozí stanoviště.' });
-
     const { data: plne } = await sb.from('omg_stanoviste').select('*').eq('id', sid).single();
     const { data: p } = await sb.from('omg_pokrok').select('*').eq('tym_id', tym.id).eq('stanoviste_id', sid).maybeSingle();
     const ted = new Date().toISOString();
-    const zaklad = { tym_id: tym.id, stanoviste_id: sid, pokusy: p?.pokusy || 0, napoveda_at: p?.napoveda_at || null };
+
+    // ── dobrý skutek: rozzáří písmeno, které po třech pokusech zůstalo skryté (jde i na dohraném světle) ──
+    if (d.akce === 'skutek_vyber' || d.akce === 'skutek_hotovo') {
+      if (plne.typ !== 'znameni' || stan.stav === 'zamceno') return res.status(400).json({ chyba: 'Tady se dobrý skutek nenabízí.' });
+      const seznam = Array.isArray(plne.znameni) ? plne.znameni : [];
+      const z = seznam.find((x) => x.id === String(d.znameni_id || ''));
+      const zapis = { ...((p && p.znameni) || {}) };
+      const st = z ? { ...(zapis[z.id] || {}) } : null;
+      if (!z || st.sviti || (st.pokusy || 0) < POKUSU_NA_ZNAMENI) return res.status(400).json({ chyba: 'Dobrý skutek patří ke znamení, které po třech pokusech zůstalo skryté.' });
+      const odpovez = async (vysledek) => res.status(200).json({ vysledek, znameni_id: z.id, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
+
+      if (d.akce === 'skutek_vyber') {
+        if (st.skutek && !d.jiny) return odpovez('skutek');
+        // losuje se ze skutků, které tým ještě neměl (když dojdou, ze všech kromě toho posledního)
+        const vse = await seznamSkutku();
+        const { data: radky } = await sb.from('omg_pokrok').select('znameni').eq('tym_id', tym.id);
+        const meli = new Set((radky || []).flatMap((r) => Object.values(r.znameni || {}).map((x) => x && x.skutek)).filter(Boolean));
+        let volne = vse.filter((x) => !meli.has(x));
+        if (!volne.length) volne = vse.filter((x) => x !== st.skutek);
+        if (!volne.length) volne = vse;
+        st.skutek = volne[Math.floor(Math.random() * volne.length)];
+        zapis[z.id] = st;
+        await sb.from('omg_pokrok').update({ znameni: zapis }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
+        return odpovez('skutek');
+      }
+
+      if (!st.skutek) return res.status(400).json({ chyba: 'Nejdřív si nech vylosovat dobrý skutek.' });
+      const popis = String(d.popis || '').trim().replace(/\s+/g, ' ').substring(0, 300);
+      if (popis.length < 10) return res.status(400).json({ chyba: 'Napište aspoň jednou větou, co jste udělali.' });
+      Object.assign(st, { sviti: true, skutek_popis: popis, skutek_at: ted });
+      zapis[z.id] = st;
+      const pismena = seznam.map((x) => (zapis[x.id] && zapis[x.id].sviti ? x.pismeno : '✧')).join(' ');
+      await sb.from('omg_pokrok').update({ znameni: zapis, ...(p && p.vyreseno_at ? { odpoved: pismena } : {}) }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
+      await sb.from('omg_pokusy').insert({ tym_id: tym.id, stanoviste_id: sid, odpoved: `${z.id} dobrý skutek: ${popis}`.substring(0, 400), spravne: true });
+      return odpovez('skutek_hotovo');
+    }
+
+    if (stan.stav === 'vyreseno' || stan.stav === 'preskoceno') return res.status(200).json({ vysledek: 'hotovo', hra, tym: verejnyTym(tym) });
+    if (stan.stav !== 'otevreno') return res.status(403).json({ chyba: 'Nejdřív vyřeš předchozí stanoviště.' });
+
+    const zaklad = { tym_id: tym.id, stanoviste_id: sid, pokusy: p?.pokusy || 0 };
 
     const hotovo = async (extra) => {
       await sb.from('omg_pokrok').upsert({ ...zaklad, ...extra }, { onConflict: 'tym_id,stanoviste_id' });
       const { data: t2 } = await sb.from('omg_tymy').select('*').eq('id', tym.id).single();
       return res.status(200).json({ vysledek: extra.preskoceno ? 'preskoceno' : 'spravne', hra: await stavHry(t2, { admin }), tym: verejnyTym(t2) });
     };
-
-    const ukazNapovedu = async () => res.status(200).json({ vysledek: 'napoveda', napoveda: plne.napoveda, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
-
-    // ── nápověda: koupě přes Stripe (správce ji vidí zdarma) ──────
-    if (d.akce === 'napoveda') {
-      if (!plne.napoveda) return res.status(400).json({ chyba: 'Tady Papavilon nápovědu nechystá.' });
-      if (zaklad.napoveda_at) return ukazNapovedu();
-      if (admin) { await odemkniNapovedu({ tymId: tym.id, stanovisteId: sid, platba: 'spravce', castka: 0 }); return ukazNapovedu(); }
-      if (!ENV.STRIPE_SECRET_KEY) return res.status(500).json({ chyba: 'Platba nápovědy se právě připravuje.' });
-      const stripe = new Stripe(ENV.STRIPE_SECRET_KEY);
-      const site = siteUrl(req);
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment', locale: 'cs', customer_email: tym.email || undefined,
-        line_items: [{ quantity: 1, price_data: { currency: 'czk', unit_amount: CENA_NAPOVEDY * 100,
-          product_data: { name: `Papavilonova nápověda — ${plne.nazev || 'světlo'}`, description: NAZEV_HRY } } }],
-        metadata: { typ: 'napoveda', hra: HRA, tym_id: tym.id, stanoviste_id: String(sid) },
-        payment_intent_data: { description: `Napoveda VS ${tym.vs} svetlo ${sid}` },
-        success_url: `${site}/tym?k=${tym.token}&n={CHECKOUT_SESSION_ID}&s=${sid}`,
-        cancel_url:  `${site}/tym?k=${tym.token}`,
-      });
-      return res.status(200).json({ vysledek: 'platba', url: session.url });
-    }
-
-    // ── nápověda: ověření po návratu ze Stripe ────────────────────
-    if (d.akce === 'napoveda_over') {
-      if (zaklad.napoveda_at) return ukazNapovedu();
-      const n = String(d.n || '');
-      if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(n)) return res.status(400).json({ chyba: 'Neplatná platba.' });
-      const session = await new Stripe(ENV.STRIPE_SECRET_KEY).checkout.sessions.retrieve(n);
-      const m = session.metadata || {};
-      if (m.typ !== 'napoveda' || m.tym_id !== tym.id || String(m.stanoviste_id) !== String(sid)) return res.status(400).json({ chyba: 'Platba nepatří k tomuto světlu.' });
-      if (session.payment_status !== 'paid') return res.status(402).json({ chyba: 'Platba zatím nedorazila. Zkus to za chvilku znovu.' });
-      await odemkniNapovedu({ tymId: tym.id, stanovisteId: sid, platba: session.id, castka: Math.round((session.amount_total || 0) / 100) });
-      return ukazNapovedu();
-    }
 
     // ── informační stanoviště: jen pokračovat ─────────────────────
     if (d.akce === 'hotovo') {

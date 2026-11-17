@@ -111,6 +111,13 @@
     <!-- OBSAH HRY -->
     <div id="tab-hra" class="skryt">
       <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Odpovědi piš každou na nový řádek. Porovnává se bez diakritiky, velikosti písmen a interpunkce, takže „Masaryk“ = „masaryk“ = „MASARYK“. Světla se hráčům ukazují postupně v pořadí.</p>
+      <div class="card" style="margin-bottom:18px">
+        <h3 style="font-family:'Cinzel',serif;font-size:17px;color:var(--gold);margin-bottom:8px">Dobré skutky</h3>
+        <p style="font-size:16px;color:#cdbfa6;margin-bottom:10px">Když týmu po třech pokusech zůstane písmeno skryté, Papavilon mu vylosuje jeden z těchto skutků. Tým ho udělá, jednou větou popíše a písmeno se rozzáří. Každý skutek na nový řádek.</p>
+        <div class="pole"><textarea id="skutky" style="min-height:180px"></textarea></div>
+        <div class="radek-btn" style="margin-top:10px"><button class="btn mala" id="skutky-uloz">Uložit skutky</button><button class="btn sec mala" id="skutky-kronika">Kronika splněných skutků</button></div>
+        <div id="kronika" style="margin-top:12px;font-size:16px;color:#efe2c8"></div>
+      </div>
       <div id="kapitoly"></div>
     </div>
 
@@ -170,7 +177,7 @@
   function vykresliTymy() {
     vykresliProdej();
     const c = data.cisla;
-    $('#cisla').innerHTML = `<div><b>${c.zaplaceno}</b><span>zaplaceno</span></div><div><b>${c.registrovano}</b><span>týmů ve hře</span></div><div><b>${c.ceka}</b><span>čeká na platbu</span></div><div><b>${c.trzba} Kč</b><span>tržba vstupenky</span></div><div><b>${c.napovedy || 0}× · ${c.trzba_napovedy || 0} Kč</b><span>nápovědy</span></div>`;
+    $('#cisla').innerHTML = `<div><b>${c.zaplaceno}</b><span>zaplaceno</span></div><div><b>${c.registrovano}</b><span>týmů ve hře</span></div><div><b>${c.ceka}</b><span>čeká na platbu</span></div><div><b>${c.trzba} Kč</b><span>tržba vstupenky</span></div>`;
     const seznam = data.tymy.filter(t => {
       if (filtr === 'registrovano') { if (!(t.stav === 'zaplaceno' && t.nazev_tymu)) return false; }
       else if (filtr !== 'vse' && t.stav !== filtr) return false;
@@ -241,7 +248,6 @@
           <div class="pole cely"><label>ZADÁNÍ</label><textarea name="zadani">${OMG.esc(s.zadani || '')}</textarea></div>
           <div class="pole cely"><label>ZNAMENÍ (jen typ Znamení; každé na nový řádek: PÍSMENO | číslo řešení | zadání)</label><textarea name="znameni_text" placeholder="D | 4, čtyři | Obejděte kašnu a spočítejte její rohy.">${OMG.esc((s.znameni || []).map(z => `${z.pismeno} | ${(z.odpovedi || []).join(', ')} | ${z.zadani}`).join('\n'))}</textarea><div class="pozn">Tým najde číslo, převede ho abecedou a zapíše písmeno. Správné písmeno se rozzáří, na každé znamení má 3 pokusy. Číslo řešení je poznámka pro tebe. Po spuštění hry nech pořadí řádků stejné.</div></div>
           <div class="pole cely"><label>UZNÁVANÉ ODPOVĚDI (typ Odpověď a Tajenka; každá na nový řádek, u tajenky první řádek se slovy oddělenými mezerou)</label><textarea name="odpovedi">${OMG.esc((s.odpovedi || []).join('\n'))}</textarea></div>
-          <div class="pole cely"><label>PAPAVILONOVA NÁPOVĚDA (tým si ji koupí za 40 Kč)</label><textarea name="napoveda" style="min-height:60px">${OMG.esc(s.napoveda || '')}</textarea></div>
           <div class="pole"><label>AUDIO (URL)</label><input name="audio_url" value="${OMG.esc(s.audio_url || '')}"></div>
           <div class="pole"><label>OBRÁZEK (URL)</label><input name="obrazek_url" value="${OMG.esc(s.obrazek_url || '')}"></div>
         </div>
@@ -271,7 +277,14 @@
     $('#los-vysledek').textContent = `✦ ${r.cislo} — ${r.jmeno}${r.tym ? ` (${r.tym})` : ''}`;
   });
 
-  function vykresliObsah() { $('#kapitoly').innerHTML = data.kapitoly.map(poleKap).join(''); }
+  function vykresliObsah() { $('#kapitoly').innerHTML = data.kapitoly.map(poleKap).join(''); $('#skutky').value = (data.skutky || []).join('\n'); }
+  $('#skutky-uloz').addEventListener('click', async () => { try { await api('skutky.uloz', { skutky: $('#skutky').value }); toast('Skutky uloženy.'); await nacti(); } catch (e) { alert(e.message); } });
+  $('#skutky-kronika').addEventListener('click', async () => {
+    try {
+      const k = (await api('skutky.kronika')).kronika || [];
+      $('#kronika').innerHTML = k.length ? k.map(x => `<p style="margin-bottom:8px"><b style="color:var(--gold)">${OMG.esc(x.tym)}</b> · ${fmt(x.kdy)}<br><span style="color:#cdbfa6">${OMG.esc(x.skutek)}</span><br>„${OMG.esc(x.popis)}“</p>`).join('') : 'Kronika čeká na první dobrý skutek.';
+    } catch (e) { alert(e.message); }
+  });
   const hodnoty = (root) => { const o = {}; root.querySelectorAll('[name]').forEach(el => { o[el.name] = el.type === 'checkbox' ? el.checked : el.value; }); return o; };
 
   $('#kapitoly').addEventListener('click', async (e) => {

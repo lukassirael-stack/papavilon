@@ -5,6 +5,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { HRA, CENA, supabase, cors, jeAdmin, siteUrl, oznacZaplaceno, emailOdkazDoHry, jeEmail, registraceOd } from '../lib/spolecne.js';
+import { seznamSkutku } from '../lib/hra.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -20,14 +21,12 @@ export default async function handler(req, res) {
 
       // ── přehled: čísla, týmy, obsah ─────────────────────────────
       case 'prehled': {
-        const [{ data: tymy }, { data: kapitoly }, { data: stanoviste }, { data: napovedy }] = await Promise.all([
+        const [{ data: tymy }, { data: kapitoly }, { data: stanoviste }] = await Promise.all([
           sb.from('omg_tymy').select('id, vs, email, platba, stav, castka, zaplaceno_at, nazev_tymu, pocet_hracu, vek_hracu, hraci, body, registrovano_at, created_at, poznamka, zdroj, odkaz_odeslan_at, token')
             .eq('hra', HRA).order('created_at', { ascending: false }).limit(1000),
           sb.from('omg_kapitoly').select('*').eq('hra', HRA).order('poradi'),
           sb.from('omg_stanoviste').select('*').order('kapitola_id').order('poradi'),
-          sb.from('omg_pokrok').select('napoveda_castka').not('napoveda_platba', 'is', null),
         ]);
-        const placene = (napovedy || []).filter((x) => (x.napoveda_castka || 0) > 0);
         const t = tymy || [];
         const od = await registraceOd();
         return res.status(200).json({
@@ -38,10 +37,8 @@ export default async function handler(req, res) {
             zaplaceno: t.filter((x) => x.stav === 'zaplaceno').length,
             registrovano: t.filter((x) => x.stav === 'zaplaceno' && x.nazev_tymu).length,
             trzba: t.filter((x) => x.stav === 'zaplaceno').reduce((s, x) => s + (x.castka || 0), 0),
-            napovedy: placene.length,
-            trzba_napovedy: placene.reduce((s, x) => s + (x.napoveda_castka || 0), 0),
           },
-          tymy: t, kapitoly: kapitoly || [], stanoviste: stanoviste || [],
+          tymy: t, kapitoly: kapitoly || [], stanoviste: stanoviste || [], skutky: await seznamSkutku(),
         });
       }
 
@@ -55,6 +52,26 @@ export default async function handler(req, res) {
         const { error } = await sb.from('nastaveni').upsert({ klic: 'omg_registrace_od', hodnota: od.toISOString() }, { onConflict: 'klic' });
         if (error) return res.status(400).json({ chyba: error.message });
         return res.status(200).json({ uspech: true, registrace_od: od.toISOString(), otevreno: Date.now() >= od.getTime() });
+      }
+
+      // ── dobré skutky: seznam, ze kterého Papavilon losuje, a kronika splněných ──
+      case 'skutky.uloz': {
+        const seznam = String(d.skutky || '').split(/\n+/).map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean).slice(0, 100);
+        if (!seznam.length) return res.status(400).json({ chyba: 'Napiš aspoň jeden dobrý skutek.' });
+        const { error } = await sb.from('nastaveni').upsert({ klic: 'omg_skutky', hodnota: JSON.stringify(seznam) }, { onConflict: 'klic' });
+        if (error) return res.status(400).json({ chyba: error.message });
+        return res.status(200).json({ uspech: true, skutky: seznam });
+      }
+      case 'skutky.kronika': {
+        const [{ data: radky }, { data: tymy }] = await Promise.all([
+          sb.from('omg_pokrok').select('tym_id, stanoviste_id, znameni'),
+          sb.from('omg_tymy').select('id, nazev_tymu').eq('hra', HRA),
+        ]);
+        const jmeno = new Map((tymy || []).map((t) => [t.id, t.nazev_tymu]));
+        const kronika = [];
+        for (const r of radky || []) for (const z of Object.values(r.znameni || {})) if (z && z.skutek_at) kronika.push({ kdy: z.skutek_at, tym: jmeno.get(r.tym_id) || '', skutek: z.skutek, popis: z.skutek_popis });
+        kronika.sort((a, b) => String(b.kdy).localeCompare(String(a.kdy)));
+        return res.status(200).json({ kronika });
       }
 
       // ── losovací čísla: hráči s krystalem + čísla zdarma ────────
@@ -132,7 +149,7 @@ export default async function handler(req, res) {
         const z = {
           kapitola_id: parseInt(d.kapitola_id, 10), poradi: parseInt(d.poradi, 10) || 1,
           typ: ['info', 'krystal', 'znameni', 'tajenka'].includes(d.typ) ? d.typ : 'odpoved',
-          nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null, napoveda: d.napoveda || null,
+          nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null,
           audio_url: d.audio_url || null, obrazek_url: d.obrazek_url || null, odpovedi,
           aktivni: d.aktivni !== false,
         };

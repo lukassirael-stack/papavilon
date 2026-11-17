@@ -404,3 +404,11 @@ button.pis.vybrane{outline:3px solid #fff;outline-offset:3px;transform:translate
 .znam.stin{border-color:rgba(255,179,107,.55)}
 .zn-stav.stin{color:#f3e6cc;line-height:1.4}
 .zn-stav.stin b{display:block;color:var(--warn);margin-bottom:2px}
+
+/* ── dobrý skutek: rozzáří skryté písmeno ──────────────────────── */
+.skutek{margin-top:12px;padding:14px;border-radius:12px;background:rgba(90,40,170,.3);border:1px dashed rgba(246,198,106,.55)}
+.sk-nadpis{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.16em;color:var(--gold2)}
+.sk-text{margin-top:6px;font-size:20px;line-height:1.4;color:var(--ink);font-weight:600}
+.skutek textarea{width:100%;margin-top:12px;min-height:76px;padding:12px 14px;border-radius:12px;border:1px solid rgba(246,198,106,.4);background:rgba(10,12,50,.7);color:var(--ink);font-family:inherit;font-size:18px;outline:none;resize:vertical}
+.skutek textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(246,198,106,.2)}
+.svetlo.vyreseno .znameni{margin-top:12px}
