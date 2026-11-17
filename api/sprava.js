@@ -131,13 +131,13 @@ export default async function handler(req, res) {
         }
         const z = {
           kapitola_id: parseInt(d.kapitola_id, 10), poradi: parseInt(d.poradi, 10) || 1,
-          typ: ['info', 'krystal', 'znameni'].includes(d.typ) ? d.typ : 'odpoved',
+          typ: ['info', 'krystal', 'znameni', 'tajenka'].includes(d.typ) ? d.typ : 'odpoved',
           nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null, napoveda: d.napoveda || null,
           audio_url: d.audio_url || null, obrazek_url: d.obrazek_url || null, odpovedi,
           aktivni: d.aktivni !== false,
         };
         if (!z.kapitola_id) return res.status(400).json({ chyba: 'Chybí kapitola.' });
-        if (z.typ === 'odpoved' && odpovedi.length === 0) return res.status(400).json({ chyba: 'Doplň aspoň jednu uznávanou odpověď.' });
+        if ((z.typ === 'odpoved' || z.typ === 'tajenka') && odpovedi.length === 0) return res.status(400).json({ chyba: 'Doplň aspoň jednu uznávanou odpověď.' });
         if (z.typ === 'znameni' && znameni.length === 0) return res.status(400).json({ chyba: 'Doplň aspoň jedno znamení.' });
         if (z.typ === 'znameni') z.znameni = znameni;
         const q = d.id ? sb.from('omg_stanoviste').update(z).eq('id', d.id) : sb.from('omg_stanoviste').insert(z);

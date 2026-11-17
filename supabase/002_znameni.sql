@@ -12,7 +12,7 @@ comment on column public.omg_pokrok.znameni is 'Postup týmu na znameních svět
 
 alter table public.omg_stanoviste drop constraint if exists omg_stanoviste_typ_check;
 alter table public.omg_stanoviste add constraint omg_stanoviste_typ_check
-  check (typ in ('odpoved', 'info', 'krystal', 'znameni'));
+  check (typ in ('odpoved', 'info', 'krystal', 'znameni', 'tajenka'));
 
 -- ── 1. kapitola: úvod ────────────────────────────────────────────────
 update public.omg_kapitoly set
@@ -54,8 +54,8 @@ cross join (values
    'Nápis má tři slova. Lvy jste potkali na Velkém náměstí.',
    '[{"id":"z1","pismeno":"U","odpovedi":["21","dvacet jedna"],"zadani":"Spočítejte písmena nápisu ŠKOLA ZÁKLAD ŽIVOTA a přičtěte lvy z erbu."}]',
    '{}'::text[]),
-  (6, 'odpoved', 'Papavilonovo poselství', null,
-   'Máte devět písmen. Složte z nich dvě slova, začátek mého poselství.',
+  (6, 'tajenka', 'Papavilonovo poselství', null,
+   'Máte devět písmen. Posouvejte je doleva a doprava, až z nich složíte dvě slova, začátek mého poselství.',
    'První slovo má čtyři písmena a začíná na K. Jedno písmeno si zaslouží háček.',
    '[]',
    array['KDYŽ NAJDU', 'KDYŽNAJDU'])

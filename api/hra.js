@@ -146,7 +146,7 @@ export default async function handler(req, res) {
 
     // ── odpověď ───────────────────────────────────────────────────
     if (d.akce === 'odpoved') {
-      if (plne.typ !== 'odpoved') return res.status(400).json({ chyba: 'Tady se odpověď nezapisuje.' });
+      if (plne.typ !== 'odpoved' && plne.typ !== 'tajenka') return res.status(400).json({ chyba: 'Tady se odpověď nezapisuje.' });
       const odpoved = String(d.odpoved || '').trim().substring(0, 200);
       if (!normalizuj(odpoved)) return res.status(400).json({ chyba: 'Napiš odpověď.' });
 
@@ -157,11 +157,13 @@ export default async function handler(req, res) {
         return res.status(429).json({ chyba: 'Chviličku… Papavilon ještě přemýšlí nad tou předchozí.' });
       }
 
-      const spravne = (plne.odpovedi || []).some((a) => normalizuj(a) && normalizuj(a) === normalizuj(odpoved));
+      const shoda = (plne.odpovedi || []).find((a) => normalizuj(a) && normalizuj(a) === normalizuj(odpoved));
+      const spravne = !!shoda;
       await sb.from('omg_pokusy').insert({ tym_id: tym.id, stanoviste_id: sid, odpoved, spravne });
       zaklad.pokusy += 1;
 
-      if (spravne) return hotovo({ vyreseno_at: ted, body: 0, odpoved });
+      // u tajenky se ukládá první uznávaná podoba (s háčky a mezerami)
+      if (spravne) return hotovo({ vyreseno_at: ted, body: 0, odpoved: plne.typ === 'tajenka' ? (plne.odpovedi[0] || odpoved) : odpoved });
 
       await sb.from('omg_pokrok').upsert(zaklad, { onConflict: 'tym_id,stanoviste_id' });
       return res.status(200).json({ vysledek: 'spatne', pokusy: zaklad.pokusy, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });

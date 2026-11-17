@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117b">
+<link rel="stylesheet" href="/styl.css?v=20261117c">
 </head>
 <body class="page">
 <header class="top">
@@ -164,7 +164,7 @@
         ${kp.uvod ? `<p class="uvod">${OMG.esc(kp.uvod)}</p>` : ''}
         ${kp.audio_url ? `<audio controls preload="none" src="${OMG.esc(kp.audio_url)}"></audio>` : ''}
         ${vykresliPismena(kp)}
-        ${kp.pocet ? kp.stanoviste.map(vykresliSvetlo).join('') : '<p class="uvod">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</p>'}
+        ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<p class="uvod">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</p>'}
         ${kp.hotovo ? `<div class="alert ok" style="margin-top:14px">Svíčka hoří. Kapitola je dohraná a díl klíče je tvůj.</div>` : ''}` : '';
       return `<details class="kap ${kp.otevrena ? '' : 'zamcena'}" id="kap-${kp.id}" data-id="${kp.id}" ${otevrene.has(kp.id) && kp.otevrena ? 'open' : ''}>
         <summary><div><h3>${OMG.esc(kp.nazev)}<small>${OMG.esc(kp.podtitul || '')}</small></h3></div><div class="stav-kap">${stavText}</div></summary>
@@ -172,6 +172,7 @@
     }).join('');
 
     document.querySelectorAll('.kap').forEach(el => el.addEventListener('toggle', () => { if (el.open) otevrene.add(+el.dataset.id); else otevrene.delete(+el.dataset.id); }));
+    document.querySelectorAll('details.abeceda').forEach(el => el.addEventListener('toggle', () => { if (el.open) abcOtevrene.add(+el.dataset.kap); else abcOtevrene.delete(+el.dataset.kap); }));
     document.querySelectorAll('.kap.zamcena summary').forEach(el => el.addEventListener('click', e => e.preventDefault()));
     document.querySelectorAll('.svicka').forEach(el => el.addEventListener('click', () => { const d = document.getElementById('kap-' + el.dataset.skok); if (d && !d.classList.contains('zamcena')) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }));
   }
@@ -180,20 +181,58 @@
   const dlazdice = (z, id) => `<span class="pis ${z.stav}"${id ? ` id="${id}"` : ''}>${z.stav === 'sviti' ? OMG.esc(z.pismeno) : (z.stav === 'stin' ? '✧' : '?')}</span>`;
   const jeSpravce = () => !!localStorage.getItem('omg_admin_key');
 
+  // ── písmena do tajenky: tým si je sám řadí doleva a doprava ──
+  const LS = (klic, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(klic) || 'null'); localStorage.setItem(klic, JSON.stringify(v)); } catch (e) {} return null; };
+  let vybrane = null;               // klíč právě vybrané dlaždice
+  const abcOtevrene = new Set();    // kapitoly s rozbalenou abecedou
+  const kapitola = (id) => stav.hra.kapitoly.find(kp => kp.id === +id);
+
+  // dlaždice kapitoly v pořadí, které si tým poskládal (nová písmena přibývají na konec)
+  function dlazdiceKap(kp) {
+    const stin = LS('omg_stin_' + kp.id) || {};
+    const taj = (kp.stanoviste || []).find(s => s.typ === 'tajenka' && s.stav === 'otevreno');
+    const vse = [];
+    (kp.stanoviste || []).forEach(s => (s.znameni || []).forEach(z => {
+      if (z.stav === 'sviti') vse.push({ klic: s.id + ':' + z.id, stav: 'sviti', pismeno: z.pismeno });
+      else if (z.stav === 'stin') vse.push({ klic: s.id + ':' + z.id, stav: 'stin', pismeno: stin[s.id + ':' + z.id] || '' });
+    }));
+    for (let m = 0; m < (taj ? taj.mezer || 0 : 0); m++) vse.push({ klic: 'mezera' + m, stav: 'mezera', pismeno: ' ' });
+    const poradi = LS('omg_poradi_' + kp.id) || [];
+    const misto = (k) => { const n = poradi.indexOf(k); return n < 0 ? 1e6 : n; };
+    return vse.map((d, n) => ({ d, n })).sort((a, b) => misto(a.d.klic) - misto(b.d.klic) || a.n - b.n).map(x => x.d);
+  }
+  const slozene = (kp) => dlazdiceKap(kp).map(d => d.pismeno || (d.stav === 'stin' ? '✧' : '')).join('').trim();
+
+  // řada dlaždic s ovládáním (je nahoře v kapitole i u tajenky)
+  function jadroPismen(kp) {
+    const dl = dlazdiceKap(kp);
+    if (!dl.length) return '<div class="pis-rada"><span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span></div>';
+    const vyb = dl.find(d => d.klic === vybrane);
+    return `<div class="pis-rada">${dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="${d.stav === 'mezera' ? 'mezera mezi slovy' : 'písmeno ' + OMG.esc(d.pismeno || 've stínu')}">${d.stav === 'mezera' ? '␣' : (d.pismeno ? OMG.esc(d.pismeno) : '✧')}</button>`).join('')}</div>
+      ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
+      <div class="pis-pozn">${vyb ? (vyb.stav === 'mezera' ? 'Mezera odděluje slova. Posuň ji tam, kde jedno slovo končí.' : 'Posouvej vybrané písmeno doleva nebo doprava.') : 'Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova.'}</div>` : ''}
+      ${vyb && vyb.stav === 'stin' ? `<div class="radek pis-stin"><input type="text" class="zn-vstup stin-vstup" maxlength="1" placeholder="písmeno" value="${OMG.esc(vyb.pismeno)}" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><button type="button" class="btn mala" data-stin="1">Doplnit písmeno</button></div><div class="pis-pozn">Tohle písmeno odpočívá ve stínu. Doplň ho podle slova, které ti vychází.</div>` : ''}`;
+  }
+
   // nad světly kapitoly: posbíraná písmena a Papavilonova abeceda
   function vykresliPismena(kp) {
-    const vse = (kp.stanoviste || []).flatMap(s => s.znameni || []);
     if (!(kp.stanoviste || []).some(s => s.typ === 'znameni')) return '';
-    const sviti = new Set(vse.filter(z => z.stav === 'sviti').map(z => z.pismeno));
+    const sviti = new Set((kp.stanoviste || []).flatMap(s => s.znameni || []).filter(z => z.stav === 'sviti').map(z => z.pismeno));
     const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((p, i) => `<div class="${sviti.has(p) ? 'sviti' : ''}"><b>${p}</b><span>${i + 1}</span></div>`).join('');
     return `<div class="pismena">
         <div class="pis-nadpis">PÍSMENA DO TAJENKY</div>
-        <div class="pis-rada">${vse.length ? vse.map(z => dlazdice(z)).join('') : '<span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span>'}</div>
-        <details class="abeceda"><summary>Papavilonova abeceda</summary>
+        <div class="pis-jadro" data-kap="${kp.id}">${jadroPismen(kp)}</div>
+        <details class="abeceda" data-kap="${kp.id}" ${abcOtevrene.has(kp.id) ? 'open' : ''}><summary>Papavilonova abeceda</summary>
           <p>Každé číslo ukrývá písmeno. Jednička je A, dvojka B a tak dál až k Z s číslem 26. Číslo, které najdete, převeďte na písmeno a zapište ho ke znamení.</p>
           <div class="abc">${abc}</div>
         </details>
       </div>`;
+  }
+
+  // po posunu stačí překreslit řady dlaždic a náhled tajenky
+  function prekresliPismena(kp) {
+    document.querySelectorAll(`.pis-jadro[data-kap="${kp.id}"]`).forEach(el => { el.innerHTML = jadroPismen(kp); });
+    document.querySelectorAll(`.taj-nahled[data-kap="${kp.id}"]`).forEach(el => { el.textContent = slozene(kp) || '…'; });
   }
 
   function vykresliZnameni(s) {
@@ -206,7 +245,7 @@
     }).join('')}</div>`;
   }
 
-  function vykresliSvetlo(s) {
+  function vykresliSvetlo(s, kp) {
     if (s.stav === 'zamceno') return `<div class="svetlo zamceno">✦ ${s.poradi}. světlo se ukáže, až rozsvítíš předchozí.</div>`;
     const hlava = `<h4>${s.poradi}. ${OMG.esc(s.nazev)}</h4>
       ${s.misto ? `<div class="misto">📍 ${OMG.esc(s.misto)}</div>` : ''}`;
@@ -230,6 +269,15 @@
       return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}${vykresliZnameni(s)}${nap}
         <div class="akce">${s.ma_napovedu && !s.napoveda ? `<button class="btn sec mala" data-akce="napoveda" data-id="${s.id}">Papavilonova nápověda · 40 Kč</button>` : ''}</div>${obnov}<div class="zprava" id="zpr-${s.id}"></div></div>`;
     }
+    if (s.typ === 'tajenka') {
+      return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}
+        <div class="pismena taj"><div class="pis-jadro" data-kap="${kp.id}">${jadroPismen(kp)}</div></div>
+        <div class="taj-popis">TVOJE TAJENKA</div><div class="taj-nahled" data-kap="${kp.id}">${OMG.esc(slozene(kp) || '…')}</div>${nap}
+        <div class="akce"><button class="btn mala" data-akce="odpoved" data-id="${s.id}" data-taj="${kp.id}">Odeslat tajenku</button>
+          ${s.ma_napovedu && !s.napoveda ? `<button class="btn sec mala" data-akce="napoveda" data-id="${s.id}">Papavilonova nápověda · 40 Kč</button>` : ''}
+          ${s.pokusy ? `<span style="font-size:15px;color:#a99cc7">pokusů: ${s.pokusy}</span>` : ''}</div>
+        <div class="zprava" id="zpr-${s.id}"></div></div>`;
+    }
     const akce = s.typ === 'info'
       ? `<div class="akce"><button class="btn mala" data-akce="hotovo" data-id="${s.id}">Pokračovat</button></div>`
       : `<div class="radek"><input type="text" id="odp-${s.id}" placeholder="tvoje odpověď" autocomplete="off" enterkeyhint="send"><button class="btn mala" data-akce="odpoved" data-id="${s.id}">Odeslat</button></div>
@@ -245,8 +293,9 @@
     const b = e.target.closest('button[data-akce]'); if (!b) return;
     const id = +b.dataset.id, akce = b.dataset.akce, zid = b.dataset.z || '';
     const vstup = document.getElementById('odp-' + id + (zid ? '-' + zid : ''));
-    const odpoved = vstup ? vstup.value.trim() : '';
+    const odpoved = b.dataset.taj ? slozene(kapitola(b.dataset.taj)) : (vstup ? vstup.value.trim() : '');
     const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
+    if (akce === 'odpoved' && b.dataset.taj && (!odpoved || odpoved.includes('✧'))) { zprava(id, odpoved ? 'Jedno písmeno odpočívá ve stínu. Ťukni na něj a doplň ho.' : 'Nejdřív poskládej písmena.', false); return; }
     if (akce === 'odpoved' && !odpoved) { zprava(id, 'Napiš odpověď.', false); return; }
     if (akce === 'znameni' && !odpoved) { zprava(id + '-' + zid, 'Napiš písmeno, které vám vyšlo.', false); return; }
     if (akce === 'znameni_obnov' && !confirm('Vrátit týmu na tomhle světle všechny pokusy a zhasnout jeho písmena?')) return;
@@ -272,11 +321,30 @@
       }
       if (akce === 'znameni_obnov') return;
       if (d.vysledek === 'spravne') zprava(id, akce === 'krystaly' ? '✓ Krystaly zapsány. Na Štědrý den držte palce!' : '✓ Správně! Světlo se rozsvítilo.', true, true);
+      else if (d.vysledek === 'spatne' && b.dataset.taj) zprava(id, 'Tahle slova Papavilon ještě nepoznává. Zkus písmena přeskládat.', false);
       else if (d.vysledek === 'spatne') { zprava(id, 'Tohle to není. Zkus to znovu.', false); const v = document.getElementById('odp-' + id); if (v) { v.value = odpoved; v.focus(); } }
       else if (d.vysledek === 'napoveda') zprava(id, '', true);
     } catch (err) { zprava(id, err.message, false); b.disabled = false; }
   });
+  // skládání tajenky: výběr dlaždice, posun doleva/doprava, doplnění písmene ze stínu
+  document.getElementById('kapitoly').addEventListener('click', (e) => {
+    const jadro = e.target.closest('.pis-jadro'); if (!jadro) return;
+    const kp = kapitola(jadro.dataset.kap); if (!kp) return;
+    const dl = e.target.closest('[data-pis]'), posun = e.target.closest('[data-posun]'), dopln = e.target.closest('[data-stin]');
+    if (dl) { vybrane = vybrane === dl.dataset.pis ? null : dl.dataset.pis; prekresliPismena(kp); }
+    else if (posun && vybrane) {
+      const klice = dlazdiceKap(kp).map(d => d.klic), odkud = klice.indexOf(vybrane), kam = odkud + (+posun.dataset.posun);
+      if (odkud < 0 || kam < 0 || kam >= klice.length) return;
+      klice.splice(kam, 0, klice.splice(odkud, 1)[0]);
+      LS('omg_poradi_' + kp.id, klice); prekresliPismena(kp);
+    }
+    else if (dopln && vybrane) {
+      const p = (jadro.querySelector('.stin-vstup').value || '').trim().toUpperCase().slice(0, 1);
+      const stin = LS('omg_stin_' + kp.id) || {}; stin[vybrane] = p; LS('omg_stin_' + kp.id, stin); prekresliPismena(kp);
+    }
+  });
   document.getElementById('kapitoly').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.classList.contains('stin-vstup')) { e.preventDefault(); e.target.parentElement.querySelector('button').click(); return; }
     if (e.key === 'Enter' && e.target.id && e.target.id.startsWith('odp-')) { e.preventDefault(); e.target.parentElement.querySelector('button').click(); }
   });
   function zprava(id, text, ok, poHotovu) {
