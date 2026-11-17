@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117">
+<link rel="stylesheet" href="/styl.css?v=20261117b">
 </head>
 <body class="page">
 <header class="top">
@@ -188,9 +188,9 @@
     const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((p, i) => `<div class="${sviti.has(p) ? 'sviti' : ''}"><b>${p}</b><span>${i + 1}</span></div>`).join('');
     return `<div class="pismena">
         <div class="pis-nadpis">PÍSMENA DO TAJENKY</div>
-        <div class="pis-rada">${vse.length ? vse.map(z => dlazdice(z)).join('') : '<span class="pis-prazdno">První písmeno se rozzáří se správným číslem.</span>'}</div>
+        <div class="pis-rada">${vse.length ? vse.map(z => dlazdice(z)).join('') : '<span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span>'}</div>
         <details class="abeceda"><summary>Papavilonova abeceda</summary>
-          <p>Každé číslo ukrývá písmeno. Jednička je A, dvojka B a tak dál až k Z s číslem 26.</p>
+          <p>Každé číslo ukrývá písmeno. Jednička je A, dvojka B a tak dál až k Z s číslem 26. Číslo, které najdete, převeďte na písmeno a zapište ho ke znamení.</p>
           <div class="abc">${abc}</div>
         </details>
       </div>`;
@@ -200,7 +200,7 @@
     return `<div class="znameni">${(s.znameni || []).map(z => {
       const tecky = z.stav === 'ceka' ? `<div class="zn-pokusy"><span class="tecky">${'●'.repeat(z.zbyva)}${'○'.repeat(3 - z.zbyva)}</span> ${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}</div>` : '';
       const telo = z.stav === 'ceka'
-        ? `<div class="radek"><input type="text" inputmode="numeric" id="odp-${s.id}-${z.id}" placeholder="číslo" autocomplete="off" enterkeyhint="send" maxlength="12"><button class="btn mala" data-akce="znameni" data-id="${s.id}" data-z="${z.id}">Rozzářit</button></div>${tecky}`
+        ? `<div class="radek"><input type="text" class="zn-vstup" id="odp-${s.id}-${z.id}" placeholder="písmeno" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="send" maxlength="3"><button class="btn mala" data-akce="znameni" data-id="${s.id}" data-z="${z.id}">Rozzářit</button></div>${tecky}`
         : (z.stav === 'sviti' ? '<div class="zn-stav ok">✓ Písmeno svítí</div>' : '<div class="zn-stav">Znamení odpočívá ve stínu. Jeho písmeno odhalíte při skládání tajenky.</div>');
       return `<div class="znam ${z.stav}" id="zn-${s.id}-${z.id}">${dlazdice(z, `pd-${s.id}-${z.id}`)}<div class="zn-telo"><div class="zn-zadani">${OMG.esc(z.zadani || '')}</div>${telo}<div class="zprava" id="zpr-${s.id}-${z.id}"></div></div></div>`;
     }).join('')}</div>`;
@@ -248,7 +248,7 @@
     const odpoved = vstup ? vstup.value.trim() : '';
     const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
     if (akce === 'odpoved' && !odpoved) { zprava(id, 'Napiš odpověď.', false); return; }
-    if (akce === 'znameni' && !odpoved) { zprava(id + '-' + zid, 'Napiš číslo, které jste našli.', false); return; }
+    if (akce === 'znameni' && !odpoved) { zprava(id + '-' + zid, 'Napiš písmeno, které vám vyšlo.', false); return; }
     if (akce === 'znameni_obnov' && !confirm('Vrátit týmu na tomhle světle všechny pokusy a zhasnout jeho písmena?')) return;
     if (akce === 'napoveda' && !localStorage.getItem('omg_admin_key') && !confirm('Papavilonova nápověda stojí 40 Kč. Zaplatíš kartou a nápověda se ti hned ukáže. Pokračovat?')) return;
     b.disabled = true;
@@ -264,8 +264,9 @@
         const zz = id + '-' + zid, el = document.getElementById('zn-' + zz), dl = document.getElementById('pd-' + zz);
         if (d.vysledek === 'sviti') { if (dl) dl.classList.add('nove'); if (el) zprava(zz, 'Písmeno se rozzářilo!', true); else zprava(id, 'Písmeno se rozzářilo a světlo svítí!', true, true); }
         else if (d.vysledek === 'stin' && !el) zprava(id, 'Světlo svítí a jedno znamení se uložilo do stínu.', true, true);
-        else if (d.vysledek === 'spatne') { zprava(zz, d.zbyva === 1 ? 'Znamení ještě spí. Zbývá poslední pokus, rozmyslete ho dobře.' : `Znamení ještě spí. Zbývají ${d.zbyva} pokusy, počítejte pozorně.`, false); const v = document.getElementById('odp-' + zz); if (v) v.focus(); }
-        else if (d.vysledek === 'opakovani') { zprava(zz, 'Tohle číslo jste už zkoušeli. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); } }
+        else if (d.vysledek === 'spatne') { zprava(zz, d.zbyva === 1 ? 'Znamení ještě spí. Zbývá poslední pokus, rozmyslete ho dobře.' : `Znamení ještě spí. Zbývají ${d.zbyva} pokusy, přepočítejte to pozorně.`, false); const v = document.getElementById('odp-' + zz); if (v) v.focus(); }
+        else if (d.vysledek === 'opakovani') { zprava(zz, 'Tohle písmeno jste už zkoušeli. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); } }
+        else if (d.vysledek === 'cislo' || d.vysledek === 'jedno') { zprava(zz, d.vysledek === 'cislo' ? 'Sem patří písmeno. Najděte ho ke svému číslu v Papavilonově abecedě a zapište ho. Pokus vám zůstává.' : 'Zapište jedno písmeno. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); v.select(); } }
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
       }

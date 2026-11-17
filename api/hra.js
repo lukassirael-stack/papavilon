@@ -100,7 +100,7 @@ export default async function handler(req, res) {
       return hotovo({ vyreseno_at: ted, body: 0, odpoved: v.hraci.map((h) => `${h.jmeno} ${h.krystal}`).join(', ') });
     }
 
-    // ── znamení: číslo z místa rozzáří písmeno, na každé jsou 3 pokusy ──
+    // ── znamení: tým najde číslo, převede ho abecedou a zapíše písmeno; na každé jsou 3 pokusy ──
     if (d.akce === 'znameni') {
       if (plne.typ !== 'znameni') return res.status(400).json({ chyba: 'Tady se znamení nehledají.' });
       const seznam = Array.isArray(plne.znameni) ? plne.znameni : [];
@@ -114,7 +114,10 @@ export default async function handler(req, res) {
 
       const odpoved = String(d.odpoved || '').trim().substring(0, 40);
       const n = normalizuj(odpoved);
-      if (!n) return res.status(400).json({ chyba: 'Napiš číslo, které jste našli.' });
+      if (!n) return res.status(400).json({ chyba: 'Napiš písmeno, které vám vyšlo.' });
+      // číslo ani delší text pokus nestojí: Papavilon čeká jedno písmeno
+      if (/^[0-9 ]+$/.test(n)) return odpovez('cislo');
+      if (n.length !== 1) return odpovez('jedno');
       // stejná odpověď podruhé pokus nestojí
       if ((st.zkousene || []).includes(n)) return odpovez('opakovani');
 
@@ -125,7 +128,7 @@ export default async function handler(req, res) {
         return res.status(429).json({ chyba: 'Chviličku… Papavilon ještě přemýšlí nad tou předchozí.' });
       }
 
-      const spravne = [...(z.odpovedi || []), z.pismeno].some((a) => normalizuj(a) && normalizuj(a) === n);
+      const spravne = normalizuj(z.pismeno) === n;
       await sb.from('omg_pokusy').insert({ tym_id: tym.id, stanoviste_id: sid, odpoved: `${z.id}: ${odpoved}`, spravne });
       st.pokusy += 1;
       if (spravne) st.sviti = true; else st.zkousene = [...(st.zkousene || []), n];

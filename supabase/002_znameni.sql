@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════
---  Outdoor Magic Games — znamení (čísla, která rozzáří písmena)
+--  Outdoor Magic Games — znamení (tým najde číslo a zapíše jeho písmeno)
 --  + obsah 1. kapitoly Velké Vánoční jízdy (tajenka KDYŽ NAJDU)
 --  Spusť celé najednou v Supabase → SQL Editor. Jde spustit i opakovaně.
 -- ════════════════════════════════════════════════════════════════════
@@ -7,7 +7,7 @@
 -- ── Nový typ světla „znameni“ a místo pro jeho data ──────────────────
 alter table public.omg_stanoviste add column if not exists znameni jsonb not null default '[]'::jsonb;
 alter table public.omg_pokrok     add column if not exists znameni jsonb not null default '{}'::jsonb;
-comment on column public.omg_stanoviste.znameni is 'Znamení na světle typu znameni: [{ id, pismeno, odpovedi[], zadani }]. Tým zapíše číslo, správné rozzáří písmeno.';
+comment on column public.omg_stanoviste.znameni is 'Znamení na světle typu znameni: [{ id, pismeno, odpovedi[], zadani }]. Tým najde číslo, převede ho abecedou a zapíše písmeno; odpovedi = číslo řešení jako poznámka.';
 comment on column public.omg_pokrok.znameni is 'Postup týmu na znameních světla: { z1: { pokusy, sviti, zkousene[] } }. Na každé znamení jsou 3 pokusy.';
 
 alter table public.omg_stanoviste drop constraint if exists omg_stanoviste_typ_check;
@@ -16,7 +16,7 @@ alter table public.omg_stanoviste add constraint omg_stanoviste_typ_check
 
 -- ── 1. kapitola: úvod ────────────────────────────────────────────────
 update public.omg_kapitoly set
-  uvod = 'Vítejte, poutníci! Zapaluji první svíčku a zvu vás do ulic Kroměříže. Na každém místě čekají znamení. Najděte číslo, zapište ho a znamení rozzáří písmeno. Každé znamení má tři pokusy, tak se dívejte pozorně a počítejte dvakrát. Z písmen nakonec složíte začátek mého poselství.'
+  uvod = 'Vítejte, poutníci! Zapaluji první svíčku a zvu vás do ulic Kroměříže. Na každém místě čekají znamení. Najděte číslo, v mé abecedě k němu vyhledejte písmeno a zapište ho. Správné písmeno se rozzáří. Každé znamení má tři pokusy, tak se dívejte pozorně a počítejte dvakrát. Z písmen nakonec složíte začátek mého poselství.'
 where hra = 'vanocni-jizda-2026' and poradi = 1;
 
 -- ── 1. kapitola: pět světel se znameními a tajenka ───────────────────

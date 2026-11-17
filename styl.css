@@ -369,6 +369,8 @@ footer .odkazy{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;m
 .svetlo .znam .radek{margin-top:10px}
 .svetlo .znam .radek input{min-width:0;width:100%}
 .svetlo .znam .radek .btn{flex:none}
+.svetlo .znam .radek input.zn-vstup{text-transform:uppercase;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:22px;letter-spacing:.06em}
+.svetlo .znam .radek input.zn-vstup::placeholder{text-transform:none;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:19px;letter-spacing:0}
 .zn-pokusy{margin-top:8px;font-size:15px;color:#cdbfa6}
 .zn-pokusy .tecky{color:var(--gold);letter-spacing:.2em}
 .zn-stav{margin-top:8px;font-size:16px;color:#cdbfa6}
