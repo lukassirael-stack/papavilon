@@ -47,7 +47,7 @@ cross join (values
    'Tenhle dům hlídají kamenní mudrci. Každý z nich vám něco napoví.',
    'Sochy stojí nahoře mezi okny a ve výklencích s mušlí. Kamenné tváře v kruhu hledejte hned pod nápisem.',
    '[{"id":"z1","pismeno":"K","odpovedi":["11","jedenáct"],"zadani":"Sečtěte sochy na průčelí a kulatá okna se sklem."},
-     {"id":"z2","pismeno":"Z","odpovedi":["26","dvacet šest"],"zadani":"Spočítejte písmena nápisu na průčelí a vynásobte je počtem kamenných tváří v kruhu."}]',
+     {"id":"z2","pismeno":"Z","odpovedi":["26","dvacet šest"],"zadani":"Spočítejte písmena nápisu na průčelí a vynásobte je (× krát) počtem kamenných tváří v kruhu."}]',
    '{}'::text[]),
   (5, 'znameni', 'Škola základ života', 'Komenského náměstí',
    'Škola základ života, stojí tu psáno. Ta slova v sobě nesou poslední znamení.',
