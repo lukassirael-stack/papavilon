@@ -586,3 +586,9 @@ body.rezim-hra .abeceda p{margin:2px 0 10px}
   background:linear-gradient(180deg,#fff3d2,#f6dca6);border:1.5px solid #c98a2b;box-shadow:0 1px 3px rgba(90,50,10,.25)}
 .zn-navod b{color:#3a1450}
 .zn-navod u{white-space:nowrap;font-weight:700;color:#5b1a78}
+
+/* dvě slova tajenky: malá mezera mezi nimi, písmena v jedné řadě */
+.pis-mezi{flex:none;width:12px}
+body.rezim-hra .taj .pis-rada{flex-wrap:nowrap;gap:5px}
+body.rezim-hra .taj .pis{min-width:22px;height:42px;font-size:clamp(17px,5.4vw,25px)}
+body.rezim-hra .panel.taj{padding:16px 8px}

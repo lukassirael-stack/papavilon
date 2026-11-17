@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117i">
+<link rel="stylesheet" href="/styl.css?v=20261117j">
 </head>
 <body class="page">
 <header class="top">
@@ -213,28 +213,35 @@
 
   // dlaždice kapitoly v pořadí, které si tým poskládal (nová písmena přibývají na konec)
   function dlazdiceKap(kp) {
-    const taj = (kp.stanoviste || []).find(s => s.typ === 'tajenka' && s.stav === 'otevreno');
     const vse = [];
     (kp.stanoviste || []).forEach(s => (s.znameni || []).forEach(z => {
       if (z.stav === 'sviti') vse.push({ klic: s.id + ':' + z.id, stav: 'sviti', pismeno: z.pismeno });
     }));
-    for (let m = 0; m < (taj ? taj.mezer || 0 : 0); m++) vse.push({ klic: 'mezera' + m, stav: 'mezera', pismeno: ' ' });
     const poradi = LS('omg_poradi_' + kp.id) || [];
     const misto = (k) => { const n = poradi.indexOf(k); return n < 0 ? 1e6 : n; };
     return vse.map((d, n) => ({ d, n })).sort((a, b) => misto(a.d.klic) - misto(b.d.klic) || a.n - b.n).map(x => x.d);
   }
-  const slozene = (kp) => dlazdiceKap(kp).map(d => d.pismeno).join('').trim();
+  // za kolikátým písmenem končí slovo (známé, až když se otevře tajenka)
+  function koncSlov(kp) {
+    const taj = (kp.stanoviste || []).find(s => s.typ === 'tajenka' && s.stav === 'otevreno');
+    const konce = new Set(); let n = 0;
+    ((taj && taj.slova) || []).slice(0, -1).forEach(d => { n += d; konce.add(n); });
+    return konce;
+  }
+  const slozene = (kp) => { const konce = koncSlov(kp); return dlazdiceKap(kp).map((d, i) => d.pismeno + (konce.has(i + 1) ? ' ' : '')).join('').trim(); };
 
   // řada dlaždic s ovládáním (je nahoře v kapitole i u tajenky)
   function jadroPismen(kp) {
-    const dl = dlazdiceKap(kp);
-    const volna = Math.max(0, (kp.pismen || 0) - dl.filter(d => d.stav !== 'mezera').length);
-    const prazdne = '<span class="pis ceka" aria-hidden="true"></span>'.repeat(volna);
-    if (!dl.length) return `<div class="pis-rada">${prazdne || '<span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span>'}</div>`;
+    const dl = dlazdiceKap(kp), konce = koncSlov(kp);
+    const volna = Math.max(0, (kp.pismen || 0) - dl.length);
+    if (!dl.length && !volna) return '<div class="pis-rada"><span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span></div>';
     const vyb = dl.find(d => d.klic === vybrane);
-    return `<div class="pis-rada">${dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="${d.stav === 'mezera' ? 'mezera mezi slovy' : 'písmeno ' + OMG.esc(d.pismeno)}">${d.stav === 'mezera' ? '␣' : OMG.esc(d.pismeno)}</button>`).join('')}${prazdne}</div>
+    const kusy = dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="písmeno ${OMG.esc(d.pismeno)}">${OMG.esc(d.pismeno)}</button>`)
+      .concat(Array.from({ length: volna }, () => '<span class="pis ceka" aria-hidden="true"></span>'));
+    const pocetSlov = konce.size + 1;
+    return `<div class="pis-rada">${kusy.map((k, i) => k + (konce.has(i + 1) ? '<span class="pis-mezi" aria-hidden="true"></span>' : '')).join('')}</div>
       ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
-      <div class="pis-pozn">${vyb ? (vyb.stav === 'mezera' ? 'Mezera odděluje slova. Posuň ji tam, kde jedno slovo končí.' : 'Posouvej vybrané písmeno doleva nebo doprava.') : 'Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova.'}</div>` : ''}`;
+      <div class="pis-pozn">${vyb ? 'Posouvej vybrané písmeno doleva nebo doprava.' : `Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš ${pocetSlov === 2 ? 'obě slova' : pocetSlov > 2 ? 'všechna slova' : 'slovo'}.`}${konce.size ? ' Malá mezera ukazuje, kde jedno slovo končí a druhé začíná.' : ''}</div>` : ''}`;
   }
 
   // panel s posbíranými písmeny
