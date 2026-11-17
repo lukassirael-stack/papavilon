@@ -282,7 +282,7 @@
     const el = document.createElement('div');
     el.className = 'oslava'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Část poselství zapadla');
     el.innerHTML = `<div class="oslava-jiskry" aria-hidden="true">${jiskry}</div><div class="oslava-obsah">
-      <img class="oslava-papavilon" src="/img/pozy/papavilon-07-jasa.webp" alt="Papavilon jásá">
+      <img class="oslava-papavilon" src="/img/pozy/papavilon-17-tanci.webp" alt="Papavilon tančí radostí">
       <div class="oslava-stitek">${RADOVE[i] || (i + 1) + '.'} část poselství zapadla!</div>
       <div class="oslava-slova">${OMG.esc(ja.slova || '')}</div>
       <p class="oslava-rec">„Výborně, poutníci! ${OMG.esc(kp.nazev)} hoří a ${(RADOVE[i] || '').toLowerCase()} část mého poselství je vaše. ${zbyva === 0 ? 'Všechny části jsou pohromadě!' : zbyva === 1 ? 'Čeká na vás ještě jedna.' : zbyva === 2 ? 'Čekají na vás ještě dvě.' : zbyva === 3 ? 'Čekají na vás ještě tři.' : `Čeká na vás ještě ${zbyva} dalších.`}“</p>
