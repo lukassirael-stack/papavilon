@@ -597,3 +597,38 @@ body.rezim-hra .panel.taj{padding:16px 8px}
 body.rezim-hra .pis.usazene{border-color:#3fd07c;box-shadow:0 0 0 2px #1c8a4b,0 0 14px rgba(90,230,150,.8),inset 0 2px 0 rgba(255,255,255,.7);display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:700}
 .rada{margin-top:14px;padding-top:12px;border-top:1px solid rgba(201,150,63,.45)}
 .rada .skutek{margin-top:0}
+
+/* ── Papavilonovo poselství a oslava složené tajenky ───────────── */
+body.rezim-hra .poselstvi{margin-top:36px}
+.pos-uvod{margin:0 0 12px;text-align:center;font-size:17px;color:#e9dcc0}
+.pos-rada{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pos-cast{padding:10px 8px;border-radius:14px;text-align:center;background:rgba(40,16,62,.75);border:1.5px dashed rgba(242,196,99,.5)}
+.pos-cast span{display:block;font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#e3c98f}
+.pos-cast b{display:block;margin:4px 0 2px;font-family:'Cinzel',serif;font-size:17px;letter-spacing:.06em;color:#a996c9}
+.pos-cast small{display:block;font-size:14px;line-height:1.2;color:#cdbfe3}
+.pos-cast.ma{border:2px solid #fff1b0;background:linear-gradient(180deg,#fff0a8 0%,#ffd03a 45%,#f6a906 100%);box-shadow:0 0 0 1.5px #b9770f,0 0 16px rgba(255,200,60,.8)}
+.pos-cast.ma span,.pos-cast.ma small{color:#5a3606}
+.pos-cast.ma b{color:#3a1450;font-size:19px}
+.pos-cast.nova{animation:zapadni 1.1s cubic-bezier(.2,1.4,.4,1) .5s both}
+@keyframes zapadni{0%{transform:scale(1.6) rotate(-6deg);opacity:0}60%{transform:scale(.94)}100%{transform:none;opacity:1}}
+body.bez-posunu{overflow:hidden}
+.oslava{position:fixed;inset:0;z-index:100;overflow-y:auto;display:flex;padding:20px 16px;
+  background:radial-gradient(120% 70% at 50% 20%,rgba(120,70,190,.97),rgba(34,22,84,.985) 60%,rgba(16,12,52,.99));animation:oslava-vstup .45s ease-out}
+@keyframes oslava-vstup{from{opacity:0}to{opacity:1}}
+.oslava-obsah{position:relative;margin:auto;width:100%;max-width:430px;text-align:center}
+.oslava-papavilon{width:min(52%,210px);margin:0 auto;display:block;filter:drop-shadow(0 0 30px rgba(255,210,110,.55));animation:poskok 1.6s ease-in-out infinite}
+@keyframes poskok{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.oslava-stitek{display:inline-block;margin-top:6px;padding:7px 22px;border-radius:999px;font-family:'Cinzel',serif;font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:#ffe08a;
+  background:linear-gradient(180deg,#4a1466,#2a0b42);border:2px solid #f2c463;box-shadow:0 0 0 1px #6a3f10,0 0 18px rgba(255,190,90,.5)}
+.oslava-slova{margin-top:14px;font-family:'Cinzel',serif;font-weight:800;font-size:min(11vw,52px);line-height:1.05;letter-spacing:.06em;
+  background:linear-gradient(180deg,#fff6cf 0%,#ffe08a 34%,#f0b548 58%,#c98a2b 76%,#f6cd6a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 #5a2f08) drop-shadow(0 0 22px rgba(255,200,90,.7));animation:zapadni 1s cubic-bezier(.2,1.4,.4,1) .15s both}
+.oslava-rec{margin:14px 0 16px;font-size:20px;line-height:1.35;font-style:italic;font-weight:600;color:#fff3d6}
+.oslava-dalsi{margin-top:14px;font-size:17px;color:#e9dcc0}
+.oslava-dal{margin-top:16px;min-width:210px;font-size:22px}
+.oslava-jiskry{position:fixed;inset:0;overflow:hidden;pointer-events:none}
+.oslava-jiskry i{position:absolute;top:-12px;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#fff6c8,#ffc93a 60%,transparent 70%);box-shadow:0 0 10px rgba(255,210,100,.9);animation:pad linear infinite}
+.oslava-jiskry i:nth-child(3n){width:5px;height:5px}
+.oslava-jiskry i:nth-child(4n){background:radial-gradient(circle,#fff,#e8dcff 60%,transparent 70%)}
+@keyframes pad{to{transform:translateY(105vh) translateX(24px);opacity:.2}}
+@media (prefers-reduced-motion:reduce){.oslava-papavilon,.oslava-jiskry i,.oslava-slova,.pos-cast.nova{animation:none}}

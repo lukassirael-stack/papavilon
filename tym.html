@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117k">
+<link rel="stylesheet" href="/styl.css?v=20261117l">
 </head>
 <body class="page">
 <header class="top">
@@ -189,7 +189,7 @@
         ${kp.audio_url ? `<audio controls preload="none" src="${OMG.esc(kp.audio_url)}"></audio>` : ''}
         ${vykresliPismena(kp)}
         ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<div class="svetlo zamceno">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</div>'}
-        ${kp.hotovo ? `<div class="kap-hotovo">Svíčka hoří. Kapitola je dohraná a díl klíče je tvůj.</div>` : ''}
+        ${vykresliPoselstvi(kp)}
         ${vykresliAbecedu(kp)}</div>`;
     })();
 
@@ -254,6 +254,46 @@
     return `<div class="pis-rada">${kusy.map((k, i) => k + (konce.has(i + 1) ? '<span class="pis-mezi" aria-hidden="true"></span>' : '')).join('')}</div>
       ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
       <div class="pis-pozn">${vyb ? 'Posouvej vybrané písmeno doleva nebo doprava.' : `Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš ${pocetSlov === 2 ? 'obě slova' : pocetSlov > 2 ? 'všechna slova' : 'slovo'}.`}${konce.size ? ' Malá mezera ukazuje, kde jedno slovo končí a druhé začíná.' : ''}${dl.some(d => d.usazene) ? ' Písmena se zeleným lemem usadil Papavilon, stojí správně.' : ''}</div>` : ''}`;
+  }
+
+  // ── Papavilonovo poselství: čtyři části, každý týden jedna ──
+  const RADOVE = ['První', 'Druhá', 'Třetí', 'Čtvrtá', 'Pátá', 'Šestá'];
+  function castiPoselstvi() {
+    return stav.hra.kapitoly.map(kp => {
+      const t = (kp.stanoviste || []).find(s => s.typ === 'tajenka' && s.stav === 'vyreseno');
+      return { kp, slova: t ? t.odpoved : null };
+    });
+  }
+  function radaPoselstvi(zvyrazni) {
+    return `<div class="pos-rada">${castiPoselstvi().map((c, i) => `<div class="pos-cast ${c.slova ? 'ma' : ''} ${c.kp.id === zvyrazni ? 'nova' : ''}"><span>${i + 1}. část</span><b>${c.slova ? OMG.esc(c.slova) : '✧ ✧ ✧'}</b><small>${c.slova ? 'zapadla na své místo' : (c.kp.otevrena ? 'čeká na tvoji tajenku' : `otevře se ${OMG.datum(c.kp.otevreno_od)}`)}</small></div>`).join('')}</div>`;
+  }
+  function vykresliPoselstvi(kp) {
+    if (!(kp.stanoviste || []).some(s => s.typ === 'tajenka')) return kp.hotovo ? '<div class="kap-hotovo">Svíčka hoří. Kapitola je dohraná.</div>' : '';
+    const casti = castiPoselstvi(), mam = casti.filter(c => c.slova).length;
+    return `<div class="panel poselstvi" id="poselstvi"><div class="panel-stitek">PAPAVILONOVO POSELSTVÍ</div>
+      <p class="pos-uvod">${mam ? `${mam === casti.length ? 'Všechny části jsou pohromadě.' : `Máš ${mam} ${mam === 1 ? 'část' : 'části'} ze ${casti.length}.`}` : `Poselství má ${casti.length} části. Každou adventní neděli se otevře cesta k další.`}</p>
+      ${radaPoselstvi()}</div>`;
+  }
+  // oslava po složení tajenky: celá obrazovka, ať je jasné, že část poselství zapadla
+  function oslava(kp) {
+    const casti = castiPoselstvi(), i = casti.findIndex(c => c.kp.id === kp.id), ja = casti[i] || {}, mam = casti.filter(c => c.slova).length, zbyva = casti.length - mam;
+    const dalsi = casti.find(c => !c.slova && !c.kp.otevrena), rozehrana = casti.find(c => !c.slova && c.kp.otevrena);
+    const jiskry = Array.from({ length: 28 }, (_, n) => `<i style="left:${(n * 37) % 100}%;animation-delay:${((n * 53) % 30) / 10}s;animation-duration:${3 + (n % 5) * .5}s"></i>`).join('');
+    const el = document.createElement('div');
+    el.className = 'oslava'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Část poselství zapadla');
+    el.innerHTML = `<div class="oslava-jiskry" aria-hidden="true">${jiskry}</div><div class="oslava-obsah">
+      <img class="oslava-papavilon" src="/img/pozy/papavilon-07-jasa.webp" alt="Papavilon jásá">
+      <div class="oslava-stitek">${RADOVE[i] || (i + 1) + '.'} část poselství zapadla!</div>
+      <div class="oslava-slova">${OMG.esc(ja.slova || '')}</div>
+      <p class="oslava-rec">„Výborně, poutníci! ${OMG.esc(kp.nazev)} hoří a ${(RADOVE[i] || '').toLowerCase()} část mého poselství je vaše. ${zbyva === 0 ? 'Všechny části jsou pohromadě!' : zbyva === 1 ? 'Čeká na vás ještě jedna.' : zbyva === 2 ? 'Čekají na vás ještě dvě.' : zbyva === 3 ? 'Čekají na vás ještě tři.' : `Čeká na vás ještě ${zbyva} dalších.`}“</p>
+      ${radaPoselstvi(kp.id)}
+      ${zbyva ? `<p class="oslava-dalsi">${rozehrana ? `${OMG.esc(rozehrana.kp.nazev)} je otevřená, další část čeká na tvoji tajenku.` : (dalsi ? `Cesta k další části se otevře ${OMG.datum(dalsi.kp.otevreno_od)}` : '')}</p>` : ''}
+      <button type="button" class="btn oslava-dal">Pokračovat</button></div>`;
+    document.body.appendChild(el); document.body.classList.add('bez-posunu');
+    const zavri = () => { el.remove(); document.body.classList.remove('bez-posunu'); const p = document.getElementById('poselstvi'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+    el.querySelector('.oslava-dal').addEventListener('click', zavri);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri(); });
+    el.querySelector('.oslava-dal').focus();
   }
 
   // panel s posbíranými písmeny
@@ -398,6 +438,7 @@
         return;
       }
       if (akce === 'znameni_obnov') return;
+      if (d.vysledek === 'spravne' && b.dataset.taj) { oslava(kapitola(b.dataset.taj)); return; }
       if (d.vysledek === 'spravne') zprava(id, akce === 'krystaly' ? '✓ Krystaly zapsány. Na Štědrý den držte palce!' : '✓ Správně! Světlo se rozsvítilo.', true, true);
       else if (d.vysledek === 'spatne' && b.dataset.taj) zprava(id, `Tahle slova Papavilon ještě nepoznává. Na svém místě stojí ${d.mist} z ${d.pismen} písmen.${d.pokusy === 3 ? ' Papavilon teď nabízí radu za dobrý skutek.' : ''}`, false);
       else if (d.vysledek === 'spatne') { zprava(id, 'Tohle to není. Zkus to znovu.', false); const v = document.getElementById('odp-' + id); if (v) { v.value = odpoved; v.focus(); } }
