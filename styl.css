@@ -592,3 +592,8 @@ body.rezim-hra .abeceda p{margin:2px 0 10px}
 body.rezim-hra .taj .pis-rada{flex-wrap:nowrap;gap:5px}
 body.rezim-hra .taj .pis{min-width:22px;height:42px;font-size:clamp(17px,5.4vw,25px)}
 body.rezim-hra .panel.taj{padding:16px 8px}
+
+/* písmena usazená Papavilonovou radou a karta rady u tajenky */
+body.rezim-hra .pis.usazene{border-color:#3fd07c;box-shadow:0 0 0 2px #1c8a4b,0 0 14px rgba(90,230,150,.8),inset 0 2px 0 rgba(255,255,255,.7);display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:700}
+.rada{margin-top:14px;padding-top:12px;border-top:1px solid rgba(201,150,63,.45)}
+.rada .skutek{margin-top:0}

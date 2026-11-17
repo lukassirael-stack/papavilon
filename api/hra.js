@@ -1,11 +1,11 @@
 // ════════════════════════════════════════════════════════════════════
 //  /api/hra.js — herní akce týmu na stanovišti
-//  POST { k, akce: 'odpoved' | 'znameni' | 'znameni_obnov' | 'skutek_vyber' | 'skutek_hotovo' | 'hotovo' | 'krystaly', stanoviste_id, znameni_id?, odpoved?, n? }
+//  POST { k, akce: 'odpoved' | 'znameni' | 'znameni_obnov' | 'skutek_vyber' | 'skutek_hotovo' | 'rada_vyber' | 'rada_hotovo' | 'hotovo' | 'krystaly', stanoviste_id, znameni_id?, odpoved?, n? }
 //  → { vysledek, hra: { kapitoly }, tym }
 // ════════════════════════════════════════════════════════════════════
 
 import { supabase, cors, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
-import { stavHry, ulozKrystaly, seznamSkutku, POKUSU_NA_ZNAMENI } from '../lib/hra.js';
+import { stavHry, ulozKrystaly, vylosujSkutek, tajenkaInfo, POKUSU_NA_ZNAMENI, POKUSU_PRED_RADOU } from '../lib/hra.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -52,14 +52,7 @@ export default async function handler(req, res) {
 
       if (d.akce === 'skutek_vyber') {
         if (st.skutek && !d.jiny) return odpovez('skutek');
-        // losuje se ze skutků, které tým ještě neměl (když dojdou, ze všech kromě toho posledního)
-        const vse = await seznamSkutku();
-        const { data: radky } = await sb.from('omg_pokrok').select('znameni').eq('tym_id', tym.id);
-        const meli = new Set((radky || []).flatMap((r) => Object.values(r.znameni || {}).map((x) => x && x.skutek)).filter(Boolean));
-        let volne = vse.filter((x) => !meli.has(x));
-        if (!volne.length) volne = vse.filter((x) => x !== st.skutek);
-        if (!volne.length) volne = vse;
-        st.skutek = volne[Math.floor(Math.random() * volne.length)];
+        st.skutek = await vylosujSkutek(tym.id, st.skutek);
         zapis[z.id] = st;
         await sb.from('omg_pokrok').update({ znameni: zapis }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
         return odpovez('skutek');
@@ -86,6 +79,31 @@ export default async function handler(req, res) {
       const { data: t2 } = await sb.from('omg_tymy').select('*').eq('id', tym.id).single();
       return res.status(200).json({ vysledek: extra.preskoceno ? 'preskoceno' : 'spravne', hra: await stavHry(t2, { admin }), tym: verejnyTym(t2) });
     };
+
+    // ── rada k tajence za dobrý skutek: Papavilon usadí písmeno na správné místo ──
+    if (d.akce === 'rada_vyber' || d.akce === 'rada_hotovo') {
+      if (plne.typ !== 'tajenka') return res.status(400).json({ chyba: 'Tady Papavilon s tajenkou neradí.' });
+      if ((p?.pokusy || 0) < POKUSU_PRED_RADOU) return res.status(400).json({ chyba: 'Papavilon poradí po třech pokusech o tajenku.' });
+      const info = tajenkaInfo(plne, p);
+      if (!info.muzeDalsi && !info.cekajici) return res.status(400).json({ chyba: 'Papavilon už poradil vše, co mohl. Poslední písmena složíte sami.' });
+      const zapis = { ...((p && p.znameni) || {}) };
+      const klic = info.cekajici ? info.cekajici[0] : `rada${info.hotove + 1}`;
+      const odpovez = async (vysledek) => res.status(200).json({ vysledek, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
+
+      if (d.akce === 'rada_vyber') {
+        if (info.cekajici && !d.jiny) return odpovez('rada');
+        zapis[klic] = { skutek: await vylosujSkutek(tym.id, info.cekajici ? info.cekajici[1].skutek : null) };
+        await sb.from('omg_pokrok').update({ znameni: zapis }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
+        return odpovez('rada');
+      }
+      if (!info.cekajici) return res.status(400).json({ chyba: 'Nejdřív si nech vylosovat dobrý skutek.' });
+      const popis = String(d.popis || '').trim().replace(/\s+/g, ' ').substring(0, 300);
+      if (popis.length < 10) return res.status(400).json({ chyba: 'Napište aspoň jednou větou, co jste udělali.' });
+      zapis[klic] = { ...zapis[klic], skutek_popis: popis, skutek_at: ted };
+      await sb.from('omg_pokrok').update({ znameni: zapis }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
+      await sb.from('omg_pokusy').insert({ tym_id: tym.id, stanoviste_id: sid, odpoved: `rada, dobrý skutek: ${popis}`.substring(0, 400), spravne: true });
+      return odpovez('rada_hotovo');
+    }
 
     // ── informační stanoviště: jen pokračovat ─────────────────────
     if (d.akce === 'hotovo') {
@@ -167,7 +185,13 @@ export default async function handler(req, res) {
       if (spravne) return hotovo({ vyreseno_at: ted, body: 0, odpoved: plne.typ === 'tajenka' ? (plne.odpovedi[0] || odpoved) : odpoved });
 
       await sb.from('omg_pokrok').upsert(zaklad, { onConflict: 'tym_id,stanoviste_id' });
-      return res.status(200).json({ vysledek: 'spatne', pokusy: zaklad.pokusy, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
+      // u tajenky Papavilon prozradí, kolik písmen stojí na svém místě
+      let mist, pismen;
+      if (plne.typ === 'tajenka') {
+        const cil = tajenkaInfo(plne, p).pismena, pokus = normalizuj(odpoved).replace(/ /g, '').toUpperCase();
+        pismen = cil.length; mist = [...cil].filter((c, i) => pokus[i] === c).length;
+      }
+      return res.status(200).json({ vysledek: 'spatne', pokusy: zaklad.pokusy, mist, pismen, hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
     }
 
     return res.status(400).json({ chyba: 'Neznámá akce.' });

@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117j">
+<link rel="stylesheet" href="/styl.css?v=20261117k">
 </head>
 <body class="page">
 <header class="top">
@@ -219,7 +219,18 @@
     }));
     const poradi = LS('omg_poradi_' + kp.id) || [];
     const misto = (k) => { const n = poradi.indexOf(k); return n < 0 ? 1e6 : n; };
-    return vse.map((d, n) => ({ d, n })).sort((a, b) => misto(a.d.klic) - misto(b.d.klic) || a.n - b.n).map(x => x.d);
+    const razene = vse.map((d, n) => ({ d, n })).sort((a, b) => misto(a.d.klic) - misto(b.d.klic) || a.n - b.n).map(x => x.d);
+    // písmena usazená Papavilonovou radou stojí pevně na svém místě
+    const taj = (kp.stanoviste || []).find(s => s.typ === 'tajenka' && s.stav === 'otevreno');
+    const usazena = ((taj && taj.usazena) || []).filter(u => u.pozice < razene.length);
+    if (!usazena.length) return razene;
+    const vysledek = new Array(razene.length).fill(null), volne = razene.slice();
+    usazena.forEach(u => {
+      let k = volne.findIndex(d => d.pismeno === u.pismeno && razene.indexOf(d) === u.pozice);
+      if (k < 0) k = volne.findIndex(d => d.pismeno === u.pismeno);
+      if (k >= 0) vysledek[u.pozice] = Object.assign({}, volne.splice(k, 1)[0], { usazene: true });
+    });
+    return vysledek.map(d => d || volne.shift());
   }
   // za kolikátým písmenem končí slovo (známé, až když se otevře tajenka)
   function koncSlov(kp) {
@@ -236,12 +247,13 @@
     const volna = Math.max(0, (kp.pismen || 0) - dl.length);
     if (!dl.length && !volna) return '<div class="pis-rada"><span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span></div>';
     const vyb = dl.find(d => d.klic === vybrane);
-    const kusy = dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="písmeno ${OMG.esc(d.pismeno)}">${OMG.esc(d.pismeno)}</button>`)
+    const kusy = dl.map(d => d.usazene ? `<span class="pis sviti usazene" aria-label="písmeno ${OMG.esc(d.pismeno)} na svém místě">${OMG.esc(d.pismeno)}</span>`
+        : `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="písmeno ${OMG.esc(d.pismeno)}">${OMG.esc(d.pismeno)}</button>`)
       .concat(Array.from({ length: volna }, () => '<span class="pis ceka" aria-hidden="true"></span>'));
     const pocetSlov = konce.size + 1;
     return `<div class="pis-rada">${kusy.map((k, i) => k + (konce.has(i + 1) ? '<span class="pis-mezi" aria-hidden="true"></span>' : '')).join('')}</div>
       ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
-      <div class="pis-pozn">${vyb ? 'Posouvej vybrané písmeno doleva nebo doprava.' : `Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš ${pocetSlov === 2 ? 'obě slova' : pocetSlov > 2 ? 'všechna slova' : 'slovo'}.`}${konce.size ? ' Malá mezera ukazuje, kde jedno slovo končí a druhé začíná.' : ''}</div>` : ''}`;
+      <div class="pis-pozn">${vyb ? 'Posouvej vybrané písmeno doleva nebo doprava.' : `Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš ${pocetSlov === 2 ? 'obě slova' : pocetSlov > 2 ? 'všechna slova' : 'slovo'}.`}${konce.size ? ' Malá mezera ukazuje, kde jedno slovo končí a druhé začíná.' : ''}${dl.some(d => d.usazene) ? ' Písmena se zeleným lemem usadil Papavilon, stojí správně.' : ''}</div>` : ''}`;
   }
 
   // panel s posbíranými písmeny
@@ -274,6 +286,15 @@
       <div class="sk-kdo">Vyberte jednoho z týmu, kdo skutek udělá. Střihněte si o to kámen, nůžky, papír!</div>
       <textarea id="sk-${s.id}-${z.id}" maxlength="300" placeholder="Jednou větou napište, co jste udělali."></textarea>
       <div class="akce"><button class="btn mala" data-akce="skutek_hotovo" data-id="${s.id}" data-z="${z.id}">Skutek je hotový</button><button class="btn sec mala" data-akce="skutek_vyber" data-jiny="1" data-id="${s.id}" data-z="${z.id}">Vylosovat jiný</button></div></div>`;
+  }
+  // rada k tajence: po třech pokusech ji Papavilon dá za vánoční dobrý skutek
+  function radaKarta(s) {
+    if (!s.rada || !s.rada.dostupna) return '';
+    if (!s.rada.skutek) return `<div class="rada"><div class="zn-stav stin"><b>Papavilon rád poradí.</b> Za vánoční dobrý skutek usadí písmeno na správné místo.</div><div class="akce"><button class="btn mala" data-akce="rada_vyber" data-id="${s.id}">Chci radu za dobrý skutek</button></div></div>`;
+    return `<div class="rada"><div class="skutek"><div class="sk-nadpis">VÁŠ VÁNOČNÍ DOBRÝ SKUTEK</div><div class="sk-text">${OMG.esc(s.rada.skutek)}</div>
+      <div class="sk-kdo">Vyberte jednoho z týmu, kdo skutek udělá. Střihněte si o to kámen, nůžky, papír! Papavilon pak usadí písmeno na správné místo.</div>
+      <textarea id="sk-${s.id}-rada" maxlength="300" placeholder="Jednou větou napište, co jste udělali."></textarea>
+      <div class="akce"><button class="btn mala" data-akce="rada_hotovo" data-id="${s.id}">Skutek je hotový</button><button class="btn sec mala" data-akce="rada_vyber" data-jiny="1" data-id="${s.id}">Vylosovat jiný</button></div></div></div>`;
   }
   // u tajenky: kolik písmen ještě čeká na dobrý skutek
   function cekaNaSkutek(kp) {
@@ -321,7 +342,7 @@
         <div class="taj-popis">TVOJE TAJENKA</div><div class="taj-nahled" data-kap="${kp.id}">${OMG.esc(slozene(kp) || '…')}</div>${cekaNaSkutek(kp)}
         <div class="akce"><button class="btn mala" data-akce="odpoved" data-id="${s.id}" data-taj="${kp.id}">Odeslat tajenku</button>
           ${s.pokusy ? `<span class="pokusu">pokusů: ${s.pokusy}</span>` : ''}</div>
-        <div class="zprava" id="zpr-${s.id}"></div></div>`;
+        <div class="zprava" id="zpr-${s.id}"></div>${radaKarta(s)}</div>`;
     }
     const akce = s.typ === 'info'
       ? `<div class="akce"><button class="btn mala" data-akce="hotovo" data-id="${s.id}">Pokračovat</button></div>`
@@ -340,8 +361,9 @@
     const odpoved = b.dataset.taj ? slozene(kapitola(b.dataset.taj)) : (vstup ? vstup.value.trim() : '');
     const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
     if (akce === 'odpoved' && b.dataset.taj && !odpoved) { zprava(id, 'Nejdřív poskládej písmena.', false); return; }
-    const popisEl = akce === 'skutek_hotovo' ? document.getElementById('sk-' + id + '-' + zid) : null, popis = popisEl ? popisEl.value.trim() : undefined;
-    if (akce === 'skutek_hotovo' && popis.length < 10) { zprava(id + '-' + zid, 'Napište aspoň jednou větou, co jste udělali.', false); return; }
+    const sPopisem = akce === 'skutek_hotovo' || akce === 'rada_hotovo';
+    const popisEl = sPopisem ? document.getElementById('sk-' + id + '-' + (zid || 'rada')) : null, popis = popisEl ? popisEl.value.trim() : undefined;
+    if (sPopisem && popis.length < 10) { zprava(zid ? id + '-' + zid : id, 'Napište aspoň jednou větou, co jste udělali.', false); return; }
     if (akce === 'odpoved' && !odpoved) { zprava(id, 'Napiš odpověď.', false); return; }
     if (akce === 'znameni' && !odpoved) { zprava(id + '-' + zid, 'Napiš písmeno, které vám vyšlo.', false); return; }
     if (akce === 'znameni_obnov' && !confirm('Vrátit týmu na tomhle světle všechny pokusy a zhasnout jeho písmena?')) return;
@@ -370,9 +392,14 @@
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
       }
+      if (akce === 'rada_vyber' || akce === 'rada_hotovo') {
+        if (d.vysledek === 'rada_hotovo') zprava(id, 'Děkuju za dobrý skutek. Písmena se zeleným lemem teď stojí na svém místě.', true);
+        const el = document.querySelector('#svetlo-' + id + (d.vysledek === 'rada_hotovo' ? ' .pis-jadro' : ' .rada')); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       if (akce === 'znameni_obnov') return;
       if (d.vysledek === 'spravne') zprava(id, akce === 'krystaly' ? '✓ Krystaly zapsány. Na Štědrý den držte palce!' : '✓ Správně! Světlo se rozsvítilo.', true, true);
-      else if (d.vysledek === 'spatne' && b.dataset.taj) zprava(id, 'Tahle slova Papavilon ještě nepoznává. Zkus písmena přeskládat.', false);
+      else if (d.vysledek === 'spatne' && b.dataset.taj) zprava(id, `Tahle slova Papavilon ještě nepoznává. Na svém místě stojí ${d.mist} z ${d.pismen} písmen.${d.pokusy === 3 ? ' Papavilon teď nabízí radu za dobrý skutek.' : ''}`, false);
       else if (d.vysledek === 'spatne') { zprava(id, 'Tohle to není. Zkus to znovu.', false); const v = document.getElementById('odp-' + id); if (v) { v.value = odpoved; v.focus(); } }
     } catch (err) { zprava(id, err.message, false); b.disabled = false; }
   });
@@ -389,9 +416,11 @@
     const dl = e.target.closest('[data-pis]'), posun = e.target.closest('[data-posun]');
     if (dl) { vybrane = vybrane === dl.dataset.pis ? null : dl.dataset.pis; prekresliPismena(kp); }
     else if (posun && vybrane) {
-      const klice = dlazdiceKap(kp).map(d => d.klic), odkud = klice.indexOf(vybrane), kam = odkud + (+posun.dataset.posun);
+      const rada = dlazdiceKap(kp), klice = rada.map(d => d.klic), odkud = klice.indexOf(vybrane), krok = +posun.dataset.posun;
+      let kam = odkud + krok;
+      while (kam >= 0 && kam < rada.length && rada[kam].usazene) kam += krok;
       if (odkud < 0 || kam < 0 || kam >= klice.length) return;
-      klice.splice(kam, 0, klice.splice(odkud, 1)[0]);
+      [klice[odkud], klice[kam]] = [klice[kam], klice[odkud]];
       LS('omg_poradi_' + kp.id, klice); prekresliPismena(kp);
     }
   });
