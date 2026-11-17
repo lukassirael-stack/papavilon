@@ -33,7 +33,7 @@ cross join (values
      {"id":"z3","pismeno":"Y","odpovedi":["25","dvacet pět"],"zadani":"Spočítejte lampy, které stojí na vlastní noze po celém náměstí."}]',
    '{}'::text[]),
   (2, 'znameni', 'Jméno v bronzu', 'Vodní ulice',
-   'Kudy kdysi vcházeli do města lidé i voda, stávala stará městská brána. Najděte Vodní ulici a dojděte až na její konec. Jméno brány tam leží v bronzu pod vašima nohama.',
+   'Kudy kdysi vcházeli do města lidé i voda, stávala stará městská brána. Najděte Vodní ulici. Hned na jejím začátku leží jméno brány v bronzu pod vašima nohama.',
    'Desky jsou dvě a nesou stejný nápis. Sečtěte obě slova na jedné z nich.',
    '[{"id":"z1","pismeno":"J","odpovedi":["10","deset"],"zadani":"Najděte bronzovou desku v dlažbě a spočítejte písmena na jedné desce."}]',
    '{}'::text[]),
