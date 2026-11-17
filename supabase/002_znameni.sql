@@ -16,7 +16,7 @@ alter table public.omg_stanoviste add constraint omg_stanoviste_typ_check
 
 -- ── 1. kapitola: úvod ────────────────────────────────────────────────
 update public.omg_kapitoly set
-  uvod = 'Vítejte, poutníci! Zapaluji první svíčku a zvu vás do ulic Kroměříže. Na každém místě čekají znamení. Najděte číslo, v mé abecedě k němu vyhledejte písmeno a zapište ho. Správné písmeno se rozzáří. Každé znamení má tři pokusy, tak se dívejte pozorně a počítejte dvakrát. Z písmen nakonec složíte začátek mého poselství.'
+  uvod = 'Vítejte, poutníci! Já jsem Papavilon, zapaluji první svíčku a zvu vás do ulic Kroměříže. Na každém místě čekají znamení. Najděte číslo, v mé abecedě k němu vyhledejte písmeno a zapište ho. Správné písmeno se rozzáří. Na každé znamení máte tři pokusy, tak se dívejte pozorně a počítejte dvakrát. Z písmen nakonec složíte začátek mého poselství. A možná se stane i něco velmi krásného :-)'
 where hra = 'vanocni-jizda-2026' and poradi = 1;
 
 -- ── 1. kapitola: pět světel se znameními a tajenka ───────────────────
