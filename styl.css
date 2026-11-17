@@ -400,3 +400,7 @@ button.pis.vybrane{outline:3px solid #fff;outline-offset:3px;transform:translate
 .pismena.taj{margin-top:14px}
 .taj-popis{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.16em;color:var(--gold2);margin-top:16px}
 .taj-nahled{margin-top:6px;font-family:'Cinzel',serif;font-weight:700;font-size:clamp(24px,7vw,34px);letter-spacing:.14em;color:var(--gold);min-height:1.3em;word-break:break-word;white-space:pre-wrap;text-shadow:0 0 18px rgba(255,190,80,.45)}
+
+.znam.stin{border-color:rgba(255,179,107,.55)}
+.zn-stav.stin{color:#f3e6cc;line-height:1.4}
+.zn-stav.stin b{display:block;color:var(--warn);margin-bottom:2px}

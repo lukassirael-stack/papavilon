@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117d">
+<link rel="stylesheet" href="/styl.css?v=20261117e">
 </head>
 <body class="page">
 <header class="top">
@@ -211,7 +211,7 @@
     return `<div class="pis-rada">${dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="${d.stav === 'mezera' ? 'mezera mezi slovy' : 'písmeno ' + OMG.esc(d.pismeno || 've stínu')}">${d.stav === 'mezera' ? '␣' : (d.pismeno ? OMG.esc(d.pismeno) : '✧')}</button>`).join('')}</div>
       ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
       <div class="pis-pozn">${vyb ? (vyb.stav === 'mezera' ? 'Mezera odděluje slova. Posuň ji tam, kde jedno slovo končí.' : 'Posouvej vybrané písmeno doleva nebo doprava.') : 'Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova.'}</div>` : ''}
-      ${vyb && vyb.stav === 'stin' ? `<div class="radek pis-stin"><input type="text" class="zn-vstup stin-vstup" maxlength="1" placeholder="písmeno" value="${OMG.esc(vyb.pismeno)}" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><button type="button" class="btn mala" data-stin="1">Doplnit písmeno</button></div><div class="pis-pozn">Tohle písmeno odpočívá ve stínu. Doplň ho podle slova, které ti vychází.</div>` : ''}`;
+      ${vyb && vyb.stav === 'stin' ? `<div class="radek pis-stin"><input type="text" class="zn-vstup stin-vstup" maxlength="1" placeholder="písmeno" value="${OMG.esc(vyb.pismeno)}" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><button type="button" class="btn mala" data-stin="1">Doplnit písmeno</button></div><div class="pis-pozn">Tohle písmeno zůstalo po třech pokusech skryté. Doplň ho podle slova, které ti vychází.</div>` : ''}`;
   }
 
   // nad světly kapitoly: posbíraná písmena a Papavilonova abeceda
@@ -240,7 +240,7 @@
       const tecky = z.stav === 'ceka' ? `<div class="zn-pokusy"><span class="tecky">${'●'.repeat(z.zbyva)}${'○'.repeat(3 - z.zbyva)}</span> ${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}</div>` : '';
       const telo = z.stav === 'ceka'
         ? `<div class="radek"><input type="text" class="zn-vstup" id="odp-${s.id}-${z.id}" placeholder="písmeno" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="send" maxlength="3"><button class="btn mala" data-akce="znameni" data-id="${s.id}" data-z="${z.id}">Rozzářit</button></div>${tecky}`
-        : (z.stav === 'sviti' ? '<div class="zn-stav ok">✓ Písmeno svítí</div>' : '<div class="zn-stav">Znamení odpočívá ve stínu. Jeho písmeno odhalíte při skládání tajenky.</div>');
+        : (z.stav === 'sviti' ? '<div class="zn-stav ok">✓ Písmeno svítí</div>' : '<div class="zn-stav stin"><b>Tři pokusy jsou vyčerpané a písmeno zůstalo skryté.</b> Domyslete si ho při skládání tajenky, nebo ho v průběhu hry rozzáříte jinou cestou.</div>');
       return `<div class="znam ${z.stav}" id="zn-${s.id}-${z.id}">${dlazdice(z, `pd-${s.id}-${z.id}`)}<div class="zn-telo"><div class="zn-zadani">${OMG.esc(z.zadani || '')}</div>${telo}<div class="zprava" id="zpr-${s.id}-${z.id}"></div></div></div>`;
     }).join('')}</div>`;
   }
@@ -252,7 +252,7 @@
     const obnov = s.typ === 'znameni' && jeSpravce() ? `<div class="akce"><button class="btn sec mala" data-akce="znameni_obnov" data-id="${s.id}">Vrátit pokusy (správce)</button></div>` : '';
     if (s.typ === 'znameni' && (s.stav === 'vyreseno' || s.stav === 'preskoceno')) {
       const vse = (s.znameni || []).every(z => z.stav === 'sviti');
-      return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="pis-rada">${(s.znameni || []).map(z => dlazdice(z, `pd-${s.id}-${z.id}`)).join('')}</div><div class="hotovo">${vse ? '✓ Rozsvíceno, všechna písmena svítí' : '✓ Světlo svítí. Písmeno ve stínu odhalíte při skládání tajenky.'}</div>${obnov}</div>`;
+      return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="pis-rada">${(s.znameni || []).map(z => dlazdice(z, `pd-${s.id}-${z.id}`)).join('')}</div><div class="hotovo">${vse ? '✓ Rozsvíceno, všechna písmena svítí' : '✓ Světlo svítí. Písmeno označené ✧ zůstalo skryté: domyslete si ho při skládání tajenky, nebo ho v průběhu hry rozzáříte jinou cestou.'}</div>${obnov}</div>`;
     }
     if (s.stav === 'vyreseno' || s.stav === 'preskoceno') {
       return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="hotovo">${s.stav === 'vyreseno' ? '✓ Rozsvíceno' : '→ Přeskočeno'}${s.odpoved ? ` · ${s.typ === 'krystal' ? 'krystaly' : 'odpověď'}: <b>${OMG.esc(s.odpoved)}</b>` : ''}</div></div>`;
@@ -312,7 +312,8 @@
       if (akce === 'znameni') {
         const zz = id + '-' + zid, el = document.getElementById('zn-' + zz), dl = document.getElementById('pd-' + zz);
         if (d.vysledek === 'sviti') { if (dl) dl.classList.add('nove'); if (el) zprava(zz, 'Písmeno se rozzářilo!', true); else zprava(id, 'Písmeno se rozzářilo a světlo svítí!', true, true); }
-        else if (d.vysledek === 'stin' && !el) zprava(id, 'Světlo svítí a jedno znamení se uložilo do stínu.', true, true);
+        else if (d.vysledek === 'stin' && el) zprava(zz, 'To byl třetí pokus. Písmeno zůstává skryté.', false);
+        else if (d.vysledek === 'stin') zprava(id, 'To byl třetí pokus. Písmeno zůstává skryté, světlo svítí dál.', false, true);
         else if (d.vysledek === 'spatne') { zprava(zz, d.zbyva === 1 ? 'Znamení ještě spí. Zbývá poslední pokus, rozmyslete ho dobře.' : `Znamení ještě spí. Zbývají ${d.zbyva} pokusy, přepočítejte to pozorně.`, false); const v = document.getElementById('odp-' + zz); if (v) v.focus(); }
         else if (d.vysledek === 'opakovani') { zprava(zz, 'Tohle písmeno jste už zkoušeli. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); } }
         else if (d.vysledek === 'cislo' || d.vysledek === 'jedno') { zprava(zz, d.vysledek === 'cislo' ? 'Sem patří písmeno. Najděte ho ke svému číslu v Papavilonově abecedě a zapište ho. Pokus vám zůstává.' : 'Zapište jedno písmeno. Pokus vám zůstává.', false); const v = document.getElementById('odp-' + zz); if (v) { v.value = odpoved; v.focus(); v.select(); } }
@@ -350,7 +351,7 @@
   function zprava(id, text, ok, poHotovu) {
     const el = document.getElementById('zpr-' + id) || (poHotovu ? document.getElementById('svetlo-' + id) : null);
     if (!el) return;
-    if (poHotovu) { const d = document.createElement('div'); d.className = 'zprava ok'; d.textContent = text; el.appendChild(d); return; }
+    if (poHotovu) { const d = document.createElement('div'); d.className = 'zprava ' + (ok ? 'ok' : 'ne'); d.textContent = text; el.appendChild(d); return; }
     el.className = 'zprava ' + (ok ? 'ok' : 'ne'); el.textContent = text;
   }
 
