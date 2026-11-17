@@ -1,12 +1,12 @@
 // ════════════════════════════════════════════════════════════════════
 //  /api/hra.js — herní akce týmu na stanovišti
-//  POST { k, akce: 'odpoved' | 'napoveda' | 'napoveda_over' | 'hotovo' | 'krystaly', stanoviste_id, odpoved?, n? }
+//  POST { k, akce: 'odpoved' | 'znameni' | 'znameni_obnov' | 'napoveda' | 'napoveda_over' | 'hotovo' | 'krystaly', stanoviste_id, znameni_id?, odpoved?, n? }
 //  → { vysledek, hra: { kapitoly }, tym }   nápověda: { vysledek: 'platba', url } → Stripe (40 Kč)
 // ════════════════════════════════════════════════════════════════════
 
 import Stripe from 'stripe';
 import { ENV, HRA, NAZEV_HRY, CENA_NAPOVEDY, supabase, cors, siteUrl, jeAdmin, normalizuj, verejnyTym } from '../lib/spolecne.js';
-import { stavHry, ulozKrystaly, odemkniNapovedu } from '../lib/hra.js';
+import { stavHry, ulozKrystaly, odemkniNapovedu, POKUSU_NA_ZNAMENI } from '../lib/hra.js';
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -30,6 +30,13 @@ export default async function handler(req, res) {
     let stan = null;
     for (const k of hra.kapitoly) for (const s of k.stanoviste) if (s.id === sid) stan = s;
     if (!stan) return res.status(403).json({ chyba: 'Tohle světlo se ti zatím neukázalo.' });
+
+    // ── správce: vrátit světlu se znameními všechny pokusy (zkoušení hry, pomoc týmu) ──
+    if (d.akce === 'znameni_obnov') {
+      if (!admin) return res.status(401).json({ chyba: 'Pokusy obnovuje správce hry.' });
+      await sb.from('omg_pokrok').update({ znameni: {}, pokusy: 0, vyreseno_at: null, odpoved: null }).eq('tym_id', tym.id).eq('stanoviste_id', sid);
+      return res.status(200).json({ vysledek: 'obnoveno', hra: await stavHry(tym, { admin }), tym: verejnyTym(tym) });
+    }
     if (stan.stav === 'vyreseno' || stan.stav === 'preskoceno') return res.status(200).json({ vysledek: 'hotovo', hra, tym: verejnyTym(tym) });
     if (stan.stav !== 'otevreno') return res.status(403).json({ chyba: 'Nejdřív vyřeš předchozí stanoviště.' });
 
@@ -91,6 +98,47 @@ export default async function handler(req, res) {
       const v = await ulozKrystaly(tym, d.krystaly);
       if (v.chyba) return res.status(v.status).json({ chyba: v.chyba });
       return hotovo({ vyreseno_at: ted, body: 0, odpoved: v.hraci.map((h) => `${h.jmeno} ${h.krystal}`).join(', ') });
+    }
+
+    // ── znamení: číslo z místa rozzáří písmeno, na každé jsou 3 pokusy ──
+    if (d.akce === 'znameni') {
+      if (plne.typ !== 'znameni') return res.status(400).json({ chyba: 'Tady se znamení nehledají.' });
+      const seznam = Array.isArray(plne.znameni) ? plne.znameni : [];
+      const z = seznam.find((x) => x.id === String(d.znameni_id || ''));
+      if (!z) return res.status(400).json({ chyba: 'Tohle znamení Papavilon na světle nemá.' });
+
+      const zapis = { ...((p && p.znameni) || {}) };
+      const st = { pokusy: 0, zkousene: [], ...(zapis[z.id] || {}) };
+      const odpovez = async (vysledek, t = tym) => res.status(200).json({ vysledek, znameni_id: z.id, zbyva: Math.max(0, POKUSU_NA_ZNAMENI - st.pokusy), hra: await stavHry(t, { admin }), tym: verejnyTym(t) });
+      if (st.sviti || st.pokusy >= POKUSU_NA_ZNAMENI) return odpovez('hotovo');
+
+      const odpoved = String(d.odpoved || '').trim().substring(0, 40);
+      const n = normalizuj(odpoved);
+      if (!n) return res.status(400).json({ chyba: 'Napiš číslo, které jste našli.' });
+      // stejná odpověď podruhé pokus nestojí
+      if ((st.zkousene || []).includes(n)) return odpovez('opakovani');
+
+      // klid mezi pokusy (chrání i před dvojím ťuknutím)
+      const { data: posledni } = await sb.from('omg_pokusy').select('created_at').eq('tym_id', tym.id).eq('stanoviste_id', sid)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (posledni && Date.now() - new Date(posledni.created_at).getTime() < 3000) {
+        return res.status(429).json({ chyba: 'Chviličku… Papavilon ještě přemýšlí nad tou předchozí.' });
+      }
+
+      const spravne = [...(z.odpovedi || []), z.pismeno].some((a) => normalizuj(a) && normalizuj(a) === n);
+      await sb.from('omg_pokusy').insert({ tym_id: tym.id, stanoviste_id: sid, odpoved: `${z.id}: ${odpoved}`, spravne });
+      st.pokusy += 1;
+      if (spravne) st.sviti = true; else st.zkousene = [...(st.zkousene || []), n];
+      zapis[z.id] = st;
+      zaklad.pokusy += 1;
+
+      // světlo je dokončené, když každé znamení svítí nebo vyčerpalo pokusy
+      const vse = seznam.every((x) => { const y = zapis[x.id] || {}; return y.sviti || (y.pokusy || 0) >= POKUSU_NA_ZNAMENI; });
+      const radek = { ...zaklad, znameni: zapis };
+      if (vse) Object.assign(radek, { vyreseno_at: ted, body: 0, odpoved: seznam.map((x) => (zapis[x.id] && zapis[x.id].sviti ? x.pismeno : '✧')).join(' ') });
+      await sb.from('omg_pokrok').upsert(radek, { onConflict: 'tym_id,stanoviste_id' });
+      const { data: t2 } = await sb.from('omg_tymy').select('*').eq('id', tym.id).single();
+      return odpovez(spravne ? 'sviti' : (st.pokusy >= POKUSU_NA_ZNAMENI ? 'stin' : 'spatne'), t2 || tym);
     }
 
     // ── odpověď ───────────────────────────────────────────────────

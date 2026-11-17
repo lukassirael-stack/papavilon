@@ -13,8 +13,8 @@ function defaults(table, row) {
   const now = new Date().toISOString();
   if (table === 'omg_tymy') return { id: randomUUID(), vs: vsSeq++, token: randomBytes(16).toString('hex'), hra: 'vanocni-jizda-2026', castka: 300, stav: 'ceka_platbu', body: 0, souhlas: false, created_at: now, nazev_tymu: null, pocet_hracu: null, vek_hracu: null, registrovano_at: null, zaplaceno_at: null, hraci: [], posledni_reseni_at: null, stripe_session_id: null, stripe_payment_intent: null, zdroj: null, poznamka: null, odkaz_odeslan_at: null, ...row };
   if (table === 'omg_kapitoly') return { id: kapSeq++, hra: 'vanocni-jizda-2026', aktivni: true, podtitul: null, uvod: null, audio_url: null, ...row };
-  if (table === 'omg_stanoviste') return { id: stanSeq++, poradi: 1, typ: 'odpoved', misto: null, zadani: null, napoveda: null, audio_url: null, obrazek_url: null, odpovedi: [], body: 100, srazka_napoveda: 20, aktivni: true, created_at: now, ...row };
-  if (table === 'omg_pokrok') return { pokusy: 0, napoveda_at: null, vyreseno_at: null, preskoceno: false, odpoved: null, body: 0, ...row };
+  if (table === 'omg_stanoviste') return { id: stanSeq++, poradi: 1, typ: 'odpoved', misto: null, zadani: null, napoveda: null, audio_url: null, obrazek_url: null, odpovedi: [], znameni: [], body: 100, srazka_napoveda: 20, aktivni: true, created_at: now, ...row };
+  if (table === 'omg_pokrok') return { pokusy: 0, napoveda_at: null, vyreseno_at: null, preskoceno: false, odpoved: null, body: 0, znameni: {}, ...row };
   if (table === 'omg_los_zdarma') return { id: (DB.omg_los_zdarma.length + 1), created_at: now, ...row };
   if (table === 'omg_tymy' && false) {}
   if (table === 'omg_pokusy') return { id: pokusSeq++, created_at: now, ...row };

@@ -341,3 +341,40 @@ footer .odkazy{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;m
 .hraci-reg .h-jm{font-size:18px;color:#efe2c8}
 .hraci-reg .h-jm small{color:#a99cc7}
 .hraci-reg .h-kr{text-align:center}
+
+/* ── znamení: čísla, která rozzáří písmena ─────────────────────── */
+.pismena{margin:14px 0 4px;padding:14px 16px;border-radius:14px;border:1px solid rgba(246,198,106,.35);background:rgba(30,24,84,.5)}
+.pis-nadpis{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.16em;color:var(--gold2);margin-bottom:10px}
+.pis-rada{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pis-prazdno{font-size:16px;color:#cdbfa6}
+.pis{flex:none;width:42px;height:48px;border-radius:10px;display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:700;font-size:24px;
+  color:#8f84b8;background:rgba(10,12,50,.7);border:1px solid rgba(246,198,106,.25)}
+.pis.sviti{color:#2a1650;background:linear-gradient(180deg,#fff3c4,#ffd36b 45%,#e3a93b);border-color:#fff3c4;
+  box-shadow:0 0 16px rgba(255,200,90,.75),0 0 34px rgba(255,180,70,.35)}
+.pis.stin{color:#a99cc7;border-style:dashed}
+.abeceda{margin-top:12px}
+.abeceda summary{cursor:pointer;font-size:17px;color:var(--gold)}
+.abeceda p{font-size:16px;line-height:1.4;color:#cdbfa6;margin:8px 0 10px}
+.abc{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
+.abc div{padding:5px 0;border-radius:8px;text-align:center;background:rgba(10,12,50,.6);border:1px solid rgba(246,198,106,.18)}
+.abc b{display:block;font-family:'Cinzel',serif;font-size:17px;color:var(--ink)}
+.abc span{display:block;font-size:14px;color:#cdbfa6}
+.abc div.sviti{border-color:var(--gold);box-shadow:0 0 12px rgba(255,190,80,.45)}
+.abc div.sviti b{color:var(--gold)}
+.znameni{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:14px}
+.znam{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:12px;border:1px solid rgba(246,198,106,.22);background:rgba(30,24,84,.4)}
+.znam.sviti{border-color:rgba(246,198,106,.7);box-shadow:0 0 18px rgba(255,190,80,.22)}
+.zn-telo{flex:1;min-width:0}
+.zn-zadani{font-size:18px;line-height:1.45;color:#efe2c8}
+.svetlo .znam .radek{margin-top:10px}
+.svetlo .znam .radek input{min-width:0;width:100%}
+.svetlo .znam .radek .btn{flex:none}
+.zn-pokusy{margin-top:8px;font-size:15px;color:#cdbfa6}
+.zn-pokusy .tecky{color:var(--gold);letter-spacing:.2em}
+.zn-stav{margin-top:8px;font-size:16px;color:#cdbfa6}
+.zn-stav.ok{color:var(--ok)}
+.svetlo.vyreseno .pis-rada{margin-top:10px}
+.pis.nove{animation:rozzar 1.6s ease-out}
+.znam .zprava:empty{min-height:0;margin:0}
+@keyframes rozzar{0%{transform:scale(.6);box-shadow:0 0 0 rgba(255,220,120,0)}35%{transform:scale(1.35);box-shadow:0 0 44px rgba(255,220,120,1),0 0 90px rgba(255,180,70,.8)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.pis.nove{animation:none}}

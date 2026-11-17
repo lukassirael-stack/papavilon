@@ -119,15 +119,27 @@ export default async function handler(req, res) {
       case 'stanoviste.uloz': {
         const odpovedi = Array.isArray(d.odpovedi) ? d.odpovedi
           : String(d.odpovedi || '').split(/[\n;|]+/).map((s) => s.trim()).filter(Boolean);
+        // znamení: jeden řádek = PÍSMENO | uznávané odpovědi oddělené čárkou | zadání
+        const znameni = [];
+        for (const radek of String(d.znameni_text || '').split(/\n+/).map((r) => r.trim()).filter(Boolean)) {
+          const casti = radek.split('|');
+          const pismeno = String(casti[0] || '').trim().toUpperCase();
+          const uznane = String(casti[1] || '').split(/[,;]+/).map((x) => x.trim()).filter(Boolean);
+          const zadaniZ = casti.slice(2).join('|').trim();
+          if ([...pismeno].length !== 1 || !uznane.length || !zadaniZ) return res.status(400).json({ chyba: `Znamení na řádku ${znameni.length + 1} zapiš jako: PÍSMENO | odpověď | zadání.` });
+          znameni.push({ id: `z${znameni.length + 1}`, pismeno, odpovedi: uznane, zadani: zadaniZ });
+        }
         const z = {
           kapitola_id: parseInt(d.kapitola_id, 10), poradi: parseInt(d.poradi, 10) || 1,
-          typ: ['info', 'krystal'].includes(d.typ) ? d.typ : 'odpoved',
+          typ: ['info', 'krystal', 'znameni'].includes(d.typ) ? d.typ : 'odpoved',
           nazev: String(d.nazev || '').trim() || 'Světlo', misto: d.misto || null, zadani: d.zadani || null, napoveda: d.napoveda || null,
           audio_url: d.audio_url || null, obrazek_url: d.obrazek_url || null, odpovedi,
           aktivni: d.aktivni !== false,
         };
         if (!z.kapitola_id) return res.status(400).json({ chyba: 'Chybí kapitola.' });
         if (z.typ === 'odpoved' && odpovedi.length === 0) return res.status(400).json({ chyba: 'Doplň aspoň jednu uznávanou odpověď.' });
+        if (z.typ === 'znameni' && znameni.length === 0) return res.status(400).json({ chyba: 'Doplň aspoň jedno znamení.' });
+        if (z.typ === 'znameni') z.znameni = znameni;
         const q = d.id ? sb.from('omg_stanoviste').update(z).eq('id', d.id) : sb.from('omg_stanoviste').insert(z);
         const { data, error } = await q.select('*').single();
         if (error) return res.status(400).json({ chyba: error.message });
