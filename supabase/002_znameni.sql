@@ -29,7 +29,7 @@ cross join (values
    'Tady začíná vaše cesta. Voda, kámen a světlo střeží první tři znamení.',
    'V erbu žijí lvi a orli. Lampy počítejte ty, které vyrůstají ze země.',
    '[{"id":"z1","pismeno":"D","odpovedi":["4","čtyři"],"zadani":"Obejděte kašnu a spočítejte její rohy."},
-     {"id":"z2","pismeno":"D","odpovedi":["4","čtyři"],"zadani":"Na Mariánském sloupu najděte kamenný erb. Kolik lvů v něm stojí? Zapište si i počet všech zvířat v erbu, ještě ho použijete."},
+     {"id":"z2","pismeno":"D","odpovedi":["4","čtyři"],"zadani":"Na Mariánském sloupu uprostřed Velkého náměstí najděte kamenný erb. Kolik lvů v něm stojí? Zapište si i počet všech zvířat v erbu, ještě ho použijete."},
      {"id":"z3","pismeno":"Y","odpovedi":["25","dvacet pět"],"zadani":"Spočítejte lampy, které stojí na vlastní noze po celém náměstí."}]',
    '{}'::text[]),
   (2, 'znameni', 'Jméno v bronzu', 'Vodní brána',
