@@ -412,3 +412,172 @@ button.pis.vybrane{outline:3px solid #fff;outline-offset:3px;transform:translate
 .skutek textarea{width:100%;margin-top:12px;min-height:76px;padding:12px 14px;border-radius:12px;border:1px solid rgba(246,198,106,.4);background:rgba(10,12,50,.7);color:var(--ink);font-family:inherit;font-size:18px;outline:none;resize:vertical}
 .skutek textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(246,198,106,.2)}
 .svetlo.vyreseno .znameni{margin-top:12px}
+
+/* ════════════════════════════════════════════════════════════════════
+   HRA — vzhled podle návrhu „Velká Vánoční jízda v Kroměříži“
+   (zimní náměstí, zlaté štítky, krémové karty úkolů, zlaté dlaždice)
+   ════════════════════════════════════════════════════════════════════ */
+body.rezim-hra{background:#2c2f73}
+body.rezim-hra .top,body.rezim-hra #main>.kicker{display:none}
+body.rezim-hra #main{max-width:none;padding:0;position:relative;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 22%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 78% 9%,#fff 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 64% 31%,#ffe9b0 50%,transparent 51%),radial-gradient(1px 1px at 30% 44%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 90% 52%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 8% 68%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 52% 81%,#ffe9b0 50%,transparent 51%),radial-gradient(1px 1px at 84% 90%,#fff 50%,transparent 51%),
+    linear-gradient(180deg,#1d2260 0%,#2f3177 34%,#3a367f 70%,#5a55a6 100%)}
+body.rezim-hra #main::before{content:"";position:absolute;inset:0 0 auto 0;height:min(96vw,470px);max-width:720px;margin:0 auto;pointer-events:none;
+  background:url(/img/hra-scena.webp) center top/cover no-repeat;
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 58%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 58%,transparent 100%)}
+body.rezim-hra #hra{position:relative;max-width:470px;margin:0 auto;padding:14px 16px 46px;--fial:#3a1450;--krem:#fdebd5;--zl:#f2c463;--zl2:#c98a2b}
+body.rezim-hra footer{background:#22245e;border-top-color:rgba(242,196,99,.25)}
+
+/* hlavička */
+.hra-hlava{text-align:center;text-shadow:0 2px 10px rgba(12,10,50,.85)}
+.hra-logo img{width:min(46%,200px);margin:0 auto;display:block;filter:drop-shadow(0 2px 8px rgba(10,8,40,.8))}
+.hra-tym{display:inline-flex;align-items:center;gap:10px;margin-top:8px;padding:6px 20px;border-radius:999px;max-width:100%;
+  font-size:19px;font-weight:700;color:#fff3d6;background:linear-gradient(180deg,#5b1a78,#3a0d57);border:2px solid var(--zl);
+  box-shadow:0 0 0 1px #7a4a12,0 4px 14px rgba(10,8,40,.6),inset 0 1px 0 rgba(255,255,255,.25)}
+.hra-tym span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hra-tym svg{flex:none;width:22px;height:16px;color:var(--zl)}
+.hra-tym svg.zrc{transform:scaleX(-1)}
+.hra-admin{margin-top:6px;font-size:14px;color:#ffd9a8}
+.hra-titul{margin-top:10px;font-family:'Cinzel',serif;font-weight:800;font-size:min(8.4vw,40px);line-height:1.02;letter-spacing:.03em;text-transform:uppercase;text-shadow:none;
+  background:linear-gradient(180deg,#fff6cf 0%,#ffe08a 34%,#f0b548 58%,#c98a2b 76%,#f6cd6a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 #5a2f08) drop-shadow(0 4px 10px rgba(10,8,40,.9))}
+.hra-titul span{font-size:.82em}
+.hra-misto{margin-top:6px;font-family:'Cinzel',serif;font-size:14px;letter-spacing:.3em;color:#fff3d6}
+.hra-ozdoba{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;color:var(--zl);font-size:11px}
+.hra-ozdoba i{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--zl))}
+.hra-ozdoba i:last-child{transform:scaleX(-1)}
+
+/* svíčky */
+body.rezim-hra .svicky{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:end;margin:14px 6px 0;padding:0 6px 4px}
+body.rezim-hra .svicky .girlanda{position:absolute;left:-10px;right:-10px;bottom:10px;width:calc(100% + 20px);height:46px;pointer-events:none}
+body.rezim-hra .svicka{position:relative;display:flex;flex-direction:column;align-items:center;gap:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+body.rezim-hra .svicka svg{position:relative;width:62%;height:auto;margin:0;overflow:visible;filter:drop-shadow(0 4px 8px rgba(10,8,40,.6))}
+body.rezim-hra .svicka.vybrana svg{width:74%}
+body.rezim-hra .svicka.hori svg,body.rezim-hra .svicka.vybrana svg{filter:drop-shadow(0 0 14px rgba(255,200,90,.55)) drop-shadow(0 4px 8px rgba(10,8,40,.6))}
+body.rezim-hra .svicka .d{position:relative;margin-top:-6px;padding:2px 12px;border-radius:999px;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:16px;color:#3a2408;white-space:nowrap;
+  background:linear-gradient(180deg,#fff3d2,#f0cf8b);border:1.5px solid #c98a2b;box-shadow:0 2px 6px rgba(10,8,40,.55)}
+body.rezim-hra .svicka.zamceno{opacity:.72}
+body.rezim-hra .svicka.ceka-se{animation:zatres .4s}
+@keyframes zatres{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* kapitola */
+body.rezim-hra .kap{border:0;background:none;border-radius:0;box-shadow:none;margin:0;overflow:visible}
+.kap-nazev{margin-top:14px;text-align:center;font-family:'Cinzel',serif;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#ffe9b8;text-shadow:0 1px 6px rgba(10,8,40,.9)}
+.kap-hotovo{margin-top:16px;padding:12px 16px;border-radius:14px;text-align:center;font-size:18px;font-weight:700;color:#3a2408;background:linear-gradient(180deg,#fff3d2,#f3cf82);border:2px solid var(--zl2)}
+body.rezim-hra .kap>audio{width:100%;margin-top:12px}
+
+/* Papavilon a svitek */
+.rec{display:grid;grid-template-columns:42% 1fr;align-items:center;margin:8px -8px 0 -14px}
+.rec-papavilon{width:100%;filter:drop-shadow(0 6px 14px rgba(10,8,40,.6));-webkit-mask-image:linear-gradient(180deg,#000 78%,transparent 100%);mask-image:linear-gradient(180deg,#000 78%,transparent 100%)}
+.svitek{position:relative;margin-left:4px;padding:14px 18px 16px 20px;border-radius:14px 26px 14px 26px;font-size:17.5px;line-height:1.25;font-style:italic;font-weight:600;color:#33204a;text-align:center;
+  background:linear-gradient(135deg,#fff6e6 0%,#fdebd0 55%,#f6d3a0 100%);border:1px solid #d9a866;
+  box-shadow:0 6px 18px rgba(10,8,40,.5),inset 0 0 18px rgba(214,160,90,.35)}
+.svitek::before{content:"";position:absolute;left:-13px;top:26px;border:8px solid transparent;border-right:14px solid #fdeed6;border-left:0;filter:drop-shadow(-1px 0 0 #d9a866)}
+.svitek::after{content:"";position:absolute;right:-5px;bottom:-5px;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3d9,#e2b877 70%);box-shadow:-2px -2px 4px rgba(120,70,20,.3)}
+.svitek b{display:block;margin-bottom:4px;font-size:1.3em;line-height:1.1;color:#3a1450}
+.svitek svg{position:absolute;right:14px;bottom:10px;width:24px;height:24px;opacity:.75}
+
+/* panely se štítkem (písmena, abeceda) */
+.panel{position:relative;margin-top:30px;padding:26px 14px 16px;border-radius:22px;
+  background:linear-gradient(180deg,rgba(74,40,116,.94),rgba(52,28,88,.94));border:2px solid var(--zl);
+  box-shadow:0 0 0 1px #6a3f10,0 0 18px rgba(255,190,90,.25),0 8px 20px rgba(10,8,40,.45),inset 0 0 22px rgba(20,8,40,.55)}
+.panel-stitek{position:absolute;left:50%;top:-19px;transform:translateX(-50%);padding:6px 22px;border-radius:999px;white-space:nowrap;
+  font-family:'Cinzel',serif;font-weight:700;font-size:15px;letter-spacing:.08em;color:#ffe08a;
+  background:linear-gradient(180deg,#4a1466,#2a0b42);border:2px solid var(--zl);box-shadow:0 0 0 1px #6a3f10,0 3px 10px rgba(10,8,40,.6),inset 0 1px 0 rgba(255,255,255,.2)}
+body.rezim-hra .pismena{margin-bottom:0;background:linear-gradient(180deg,rgba(74,40,116,.94),rgba(52,28,88,.94))}
+body.rezim-hra .pis-rada{gap:8px;justify-content:center}
+body.rezim-hra .pis{flex:0 1 40px;width:auto;min-width:29px;height:44px;border-radius:9px;font-size:25px;color:#3a2408;background:rgba(58,22,84,.9);border:2px solid #d9a441;box-shadow:inset 0 2px 6px rgba(10,4,30,.6)}
+body.rezim-hra .pis.sviti{color:#4a2b05;background:linear-gradient(180deg,#fff0a8 0%,#ffd03a 40%,#f6a906 100%);border-color:#fff1b0;
+  box-shadow:0 0 0 1.5px #b9770f,0 0 14px rgba(255,200,60,.95),0 0 30px rgba(255,170,40,.5),inset 0 2px 0 rgba(255,255,255,.7)}
+body.rezim-hra .pis.stin{color:var(--zl);border-style:dashed}
+body.rezim-hra .pis.mezera{width:28px;color:#e9d5a6;border-style:dashed;font-size:18px}
+body.rezim-hra button.pis.vybrane{outline:3px solid #fff;outline-offset:2px}
+body.rezim-hra .pis-ovl{margin:14px auto 0}
+body.rezim-hra .pis-pozn{text-align:center;color:#e9dcc0}
+body.rezim-hra .pis-prazdno{color:#e9dcc0}
+
+/* karta úkolu */
+body.rezim-hra .svetlo{margin-top:18px;padding:16px 16px 18px;border-radius:22px;color:#33204a;
+  background:linear-gradient(135deg,#fff5e6 0%,#fdebd5 50%,#f5d6ae 100%);border:2px solid #e9b860;
+  box-shadow:0 0 0 1px #9a6417,0 0 16px rgba(255,190,90,.35),0 8px 20px rgba(10,8,40,.45),inset 0 0 20px rgba(214,150,80,.3)}
+body.rezim-hra .svetlo.zamceno{padding:14px 16px;color:#efe2c8;font-size:17px;text-align:center;opacity:1;
+  background:rgba(52,28,88,.6);border:1.5px dashed rgba(242,196,99,.6);box-shadow:none}
+.sv-hlava{display:flex;gap:14px;align-items:center}
+.sv-obr{flex:none;width:34%;max-width:140px;aspect-ratio:214/248;object-fit:cover;margin:0!important;border-radius:38% 38% 16px 16px/26% 26% 16px 16px!important;border:2px solid #e9b860;box-shadow:0 0 0 1px #9a6417,0 3px 8px rgba(60,30,10,.35)}
+.sv-nadpis{min-width:0;flex:1}
+body.rezim-hra .svetlo h4{display:block;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:25px;line-height:1.08;letter-spacing:0;color:var(--fial)}
+body.rezim-hra .svetlo .misto{display:inline-flex;align-items:center;gap:6px;margin:8px 0 0;padding:3px 14px 3px 10px;border-radius:999px;font-size:17px;font-weight:700;color:#2b1a3f;
+  background:linear-gradient(180deg,#fff7ea,#f6dfbd);border:1px solid #e3c28e;box-shadow:0 1px 3px rgba(90,50,10,.25)}
+body.rezim-hra .svetlo .misto svg{width:14px;height:18px}
+.sv-linka{position:relative;height:1px;margin:14px 6px 12px;background:linear-gradient(90deg,transparent,#c9963f 15%,#c9963f 85%,transparent)}
+.sv-linka b{position:absolute;left:50%;top:-4px;width:8px;height:8px;margin-left:-4px;transform:rotate(45deg);background:#fdebd5;border:1.5px solid #c9963f}
+body.rezim-hra .svetlo .zadani{font-size:18px;line-height:1.35;font-style:italic;color:#4a3562}
+body.rezim-hra .svetlo audio{margin:10px 0 0}
+body.rezim-hra .znameni{gap:0;margin-top:4px}
+body.rezim-hra .znam{display:flex;gap:12px;align-items:flex-start;padding:12px 0 0;margin-top:12px;border:0;border-top:1px solid rgba(201,150,63,.45);border-radius:0;background:none;box-shadow:none}
+body.rezim-hra .znam.sviti,body.rezim-hra .znam.stin{border-color:rgba(201,150,63,.45);box-shadow:none}
+body.rezim-hra .zn-zadani{font-size:19px;line-height:1.3;font-weight:600;color:#2b1a3f}
+body.rezim-hra .svetlo .znam .radek{display:flex;align-items:center;gap:12px;margin-top:12px}
+body.rezim-hra .svetlo .radek input{background:linear-gradient(180deg,#fffaf0,#fbe9cf);color:#2b1a3f;border:2px solid #e2a84a;box-shadow:0 0 0 1px #9a6417,inset 0 2px 5px rgba(120,70,20,.25)}
+body.rezim-hra .svetlo .radek input:focus{outline:none;box-shadow:0 0 0 1px #9a6417,0 0 0 4px rgba(242,196,99,.5),inset 0 2px 5px rgba(120,70,20,.25)}
+body.rezim-hra .svetlo .znam .radek input.zn-vstup{flex:none;width:56px;height:56px;padding:0;border-radius:11px;font-size:28px}
+body.rezim-hra .btn.rozzarit{flex:1;min-width:0;max-width:210px;padding:10px 14px;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#fff0c4;
+  background:linear-gradient(180deg,#6a1a86 0%,#4a0f66 55%,#2e0845 100%);border:2px solid #f2c463;border-radius:999px;
+  box-shadow:0 0 0 1px #8a5512,0 0 12px rgba(255,190,90,.45),inset 0 2px 0 rgba(255,255,255,.25),inset 0 -6px 10px rgba(20,4,40,.5)}
+.tecky{flex:none;display:flex;gap:7px}
+.tecky i{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8 0,#ffc21f 45%,#e08a00 100%);box-shadow:0 0 0 1px #a8690a,0 1px 3px rgba(60,30,0,.4)}
+.tecky i.pryc{background:rgba(120,80,30,.14);box-shadow:inset 0 0 0 1.5px #c9a467}
+body.rezim-hra .zn-stav{color:#5a4370;font-size:17px}
+body.rezim-hra .zn-stav.ok{color:#1c6b3c;font-weight:700}
+body.rezim-hra .zn-stav.stin{color:#4a3562}
+body.rezim-hra .zn-stav.stin b{color:#a8480c}
+body.rezim-hra .svetlo .hotovo{color:#1c6b3c;font-weight:700;font-size:17px}
+body.rezim-hra .svetlo.vyreseno{border-color:#e9b860}
+body.rezim-hra .svetlo.vyreseno>.pis-rada{justify-content:flex-start;margin-top:4px}
+body.rezim-hra .svetlo .zprava{font-weight:700}
+body.rezim-hra .svetlo .zprava.ok{color:#1c6b3c}
+body.rezim-hra .svetlo .zprava.ne{color:#a3231b}
+body.rezim-hra .svetlo .btn.sec{background:transparent;color:#3a1450;border-color:#7a4a9a;box-shadow:none}
+body.rezim-hra .svetlo .pokusu{font-size:15px;color:#6a5580}
+body.rezim-hra .svetlo .hraci-reg .hrac{color:#2b1a3f}
+body.rezim-hra .skutek{background:linear-gradient(180deg,#4a1466,#34104f);border:2px solid var(--zl);border-style:solid;box-shadow:0 0 0 1px #6a3f10}
+body.rezim-hra .skutek .sk-text{color:#fff6e2}
+body.rezim-hra .skutek .btn.sec{color:#ffe7a6;border-color:rgba(242,196,99,.7)}
+body.rezim-hra .skutek textarea{background:linear-gradient(180deg,#fffaf0,#fbe9cf);color:#2b1a3f;border:2px solid #e2a84a}
+body.rezim-hra .panel.taj{margin-top:16px;padding:16px 12px}
+body.rezim-hra .taj .btn.sec{color:#ffe7a6;border-color:rgba(242,196,99,.7)}
+body.rezim-hra .taj-popis{color:#8a5a12}
+body.rezim-hra .taj-nahled{color:var(--fial);text-shadow:none}
+
+/* abeceda */
+body.rezim-hra .abeceda{margin-top:36px;padding:26px 10px 14px}
+body.rezim-hra .abeceda summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:15px;color:#ffe08a}
+body.rezim-hra .abeceda summary::-webkit-details-marker{display:none}
+body.rezim-hra .abeceda summary svg{width:15px;height:9px;transition:transform .2s}
+body.rezim-hra .abeceda:not([open]) summary svg{transform:rotate(-90deg)}
+body.rezim-hra .abeceda:not([open]){padding-bottom:6px}
+body.rezim-hra .abeceda p{margin:0 0 10px;text-align:center;font-size:15.5px;color:#e9dcc0}
+body.rezim-hra .abc{grid-template-columns:repeat(13,minmax(0,1fr));gap:4px}
+body.rezim-hra .abc div{padding:3px 0 2px;border-radius:7px;background:linear-gradient(180deg,#fff6e0,#f6dcae);border:1.5px solid #e2a84a;box-shadow:0 0 0 1px #8a5512,0 2px 3px rgba(10,4,30,.4)}
+body.rezim-hra .abc b{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:min(4.6vw,20px);line-height:1;color:#2b1a3f}
+body.rezim-hra .abc span{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:min(3.3vw,14px);line-height:1.05;color:#2b1a3f}
+body.rezim-hra .abc div.sviti{background:linear-gradient(180deg,#fff0a8,#ffd03a 45%,#f6a906);border-color:#fff1b0;box-shadow:0 0 0 1px #b9770f,0 0 10px rgba(255,200,60,.9)}
+body.rezim-hra .abc div.sviti b{color:#4a2b05}
+.hra-pata{margin-top:22px;text-align:center;font-size:16px;color:#e3daf5}
+.hra-pata a{color:var(--zl)}
+
+body.rezim-hra .flame{transform-box:fill-box;transform-origin:50% 100%}
+body.rezim-hra .svetlo .zprava:empty{display:none}
+body.rezim-hra .pis-rada{flex-wrap:nowrap}
+body.rezim-hra .svetlo.vyreseno>.pis-rada,body.rezim-hra .taj .pis-rada{flex-wrap:wrap}
+.sk-kdo{margin-top:8px;font-size:17px;line-height:1.35;color:#ffe9b8;font-style:italic}
+body.rezim-hra .abeceda summary.panel-stitek{padding:6px 22px;line-height:1.35;justify-content:center;position:absolute}
+body.rezim-hra .abeceda summary.panel-stitek::after{content:none}
+body.rezim-hra .abeceda p{margin:2px 0 10px}
+@media (min-width:721px){body.rezim-hra #main::before{
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 58%,transparent 100%),linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent 100%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(180deg,#000 0,#000 58%,transparent 100%),linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent 100%);mask-composite:intersect}}

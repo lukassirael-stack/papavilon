@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117f">
+<link rel="stylesheet" href="/styl.css?v=20261117h">
 </head>
 <body class="page">
 <header class="top">
@@ -76,15 +76,17 @@
 
   <!-- hra -->
   <section id="hra" class="skryt">
-    <div class="tym-hlava">
-      <div>
-        <div class="jmeno" id="h-nazev"></div>
-        <div id="h-admin" class="skryt" style="font-size:14px;color:var(--warn)">náhled správce — všechny kapitoly otevřené</div>
-      </div>
+    <div class="hra-hlava">
+      <a href="/" class="hra-logo"><img src="/img/logo-omg.webp" alt="Outdoor Magic Games"></a>
+      <div class="hra-tym"><svg viewBox="0 0 30 22" aria-hidden="true"><path d="M27 19C19 18 12 14 8 6M11 10c-4 0-6-2-7-5 4 0 6 2 7 5zm4 4c-4 1-7 0-9-3 4-1 7 0 9 3zm5 3c-4 2-7 1-10-1 4-2 7-1 10 1zM13 8c0-4 1-6 4-7 1 3 0 6-4 7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="h-nazev"></span><svg class="zrc" viewBox="0 0 30 22" aria-hidden="true"><path d="M27 19C19 18 12 14 8 6M11 10c-4 0-6-2-7-5 4 0 6 2 7 5zm4 4c-4 1-7 0-9-3 4-1 7 0 9 3zm5 3c-4 2-7 1-10-1 4-2 7-1 10 1zM13 8c0-4 1-6 4-7 1 3 0 6-4 7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div id="h-admin" class="skryt hra-admin">náhled správce: všechny kapitoly otevřené</div>
+      <h1 class="hra-titul">Velká<br>Vánoční jízda<br><span>2026</span></h1>
+      <div class="hra-misto">V KROMĚŘÍŽI</div>
+      <div class="hra-ozdoba"><i></i><b>❖</b><i></i></div>
     </div>
     <div class="svicky" id="svicky"></div>
     <div id="kapitoly"></div>
-    <p class="stred" style="margin-top:22px;font-size:16px;color:#a99cc7">Ulož si tuto stránku do telefonu. Hraješ kdykoli až do 24. 12.</p>
+    <p class="hra-pata">Ulož si tuto stránku do telefonu. Hraješ kdykoli až do 24. 12. · <a href="/pravidla">Pravidla hry</a></p>
   </section>
 </main>
 
@@ -100,14 +102,36 @@
   let k = q.get('k') || '';
   if (!k && localStorage.getItem('omg_token')) { location.replace('/tym?k=' + localStorage.getItem('omg_token')); return; }
   const sekce = ['bez-odkazu','nacitam','chyba','ceka','registrace','hra'];
-  const ukaz = (id) => sekce.forEach(x => document.getElementById(x).classList.toggle('skryt', x !== id));
+  const ukaz = (id) => { sekce.forEach(x => document.getElementById(x).classList.toggle('skryt', x !== id)); document.body.classList.toggle('rezim-hra', id === 'hra'); };
   if (!k) return ukaz('bez-odkazu');
 
   let stav = null;                 // { tym, hra }
-  const otevrene = new Set();      // id kapitol rozbalených uživatelem
-  let prvniVykresleni = true;
+  let aktivni = null;              // id kapitoly, kterou má tým právě otevřenou
 
-  const SVICKA = (barva, hori, delay) => `<svg viewBox="0 0 70 120">${hori ? `<path class="flame" d="M35 8c7 10 8 18 0 26-8-8-7-16 0-26z" fill="#ffd36b" style="animation-delay:${delay}s"/>` : ''}<rect x="22" y="38" width="26" height="74" rx="5" fill="${barva}"/><rect x="22" y="38" width="8" height="74" rx="4" fill="${barva === '#d9a5e8' ? '#ecc6f4' : '#9c66ea'}"/></svg>`;
+  // adventní svíčka: krémová a velká = vybraná kapitola, plamen = otevřená, velký plamen = dohraná
+  const VLOCKA = '<g stroke="#e9b84a" stroke-width="1.6" stroke-linecap="round" fill="none"><path d="M0-11V11M-9.5-5.5 9.5 5.5M-9.5 5.5 9.5-5.5"/><path d="M-3-8 0-5 3-8M-3 8 0 5 3 8M-8.4-1.4-4.3-2.5-5.4-6.6M8.4 1.4 4.3 2.5 5.4 6.6M-5.4 6.6-4.3 2.5-8.4 1.4M5.4-6.6 4.3-2.5 8.4-1.4"/></g>';
+  const SVICKA = (vybrana, plamen, velky, delay) => `<svg viewBox="0 0 80 ${vybrana ? 132 : 112}" aria-hidden="true">
+    <defs><linearGradient id="sv-kr" x1="0" x2="1"><stop offset="0" stop-color="#fff6dc"/><stop offset=".55" stop-color="#f3dfb0"/><stop offset="1" stop-color="#d9b877"/></linearGradient>
+    <linearGradient id="sv-fi" x1="0" x2="1"><stop offset="0" stop-color="#9a5fd6"/><stop offset=".5" stop-color="#6f33b4"/><stop offset="1" stop-color="#3f1a78"/></linearGradient>
+    <radialGradient id="sv-pl" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#fffbe0"/><stop offset=".5" stop-color="#ffd35a"/><stop offset="1" stop-color="#f08a1c"/></radialGradient></defs>
+    <g transform="translate(0 ${vybrana ? 0 : 6})">
+    ${plamen ? `<g transform="translate(40 ${vybrana ? 46 : 42})"><path class="flame" style="animation-delay:${delay}s" d="M0 0c${velky ? '-9-9-9-20 0-36 9 16 9 27 0 36z' : '-4-4-4-9 0-16 4 7 4 12 0 16z'}" fill="url(#sv-pl)"/></g><path d="M40 ${vybrana ? 46 : 42}v6" stroke="#5a3a1c" stroke-width="2" stroke-linecap="round"/>` : ''}
+    <rect x="${vybrana ? 10 : 14}" y="${vybrana ? 50 : 46}" width="${vybrana ? 60 : 52}" height="${vybrana ? 78 : 58}" rx="7" fill="url(#${vybrana ? 'sv-kr' : 'sv-fi'})" stroke="${vybrana ? '#e9c87e' : '#b48ae6'}" stroke-width="1.2"/>
+    <ellipse cx="40" cy="${vybrana ? 51 : 47}" rx="${vybrana ? 29 : 25}" ry="4.5" fill="${vybrana ? '#fffaf0' : '#b98be9'}" opacity=".9"/>
+    <g transform="translate(40 ${vybrana ? 90 : 76}) scale(${vybrana ? 1.25 : 1})">${VLOCKA}</g></g></svg>`;
+  // jehličí pod svíčkami
+  const GIRLANDA = (() => {
+    let o = '<svg class="girlanda" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true">';
+    const barvy = ['#123d2a', '#1b5237', '#256b46', '#174a31', '#2f7d52'];
+    for (let i = 0; i < 420; i++) {
+      const r1 = ((i * 7919) % 1000) / 1000, r2 = ((i * 104729) % 1000) / 1000, r3 = ((i * 15485863) % 1000) / 1000;
+      const x = 4 + r1 * 392, y = 24 + (r2 - .5) * 12, uhel = (r3 - .5) * 2.6 + (i % 2 ? 0 : Math.PI), d = 7 + r2 * 9;
+      o += `<path d="M${x.toFixed(1)} ${y.toFixed(1)}l${(Math.sin(uhel) * d * 1.5).toFixed(1)} ${(-Math.cos(uhel) * d).toFixed(1)}" stroke="${barvy[i % 5]}" stroke-width="1.5" stroke-linecap="round"/>`;
+    }
+    for (let i = 0; i < 26; i++) { const x = 10 + ((i * 7919) % 380), y = 14 + ((i * 131) % 12); o += `<circle cx="${x}" cy="${y}" r="1.6" fill="#f4f7ff" opacity=".85"/>`; }
+    for (let i = 0; i < 6; i++) o += `<circle cx="${40 + i * 64}" cy="${26 + (i % 2) * 5}" r="3.4" fill="#c9302c" stroke="#8a1a17" stroke-width=".8"/>`;
+    return o + '</svg>';
+  })();
 
   async function nacti() {
     try {
@@ -145,36 +169,36 @@
     document.getElementById('h-nazev').textContent = t.nazev_tymu;
     document.getElementById('h-admin').classList.toggle('skryt', !localStorage.getItem('omg_admin_key'));
 
+
+    // která kapitola je otevřená: napoprvé první rozehraná
+    const dostupne = h.kapitoly.filter(kp => kp.otevrena);
+    if (!dostupne.some(kp => kp.id === aktivni)) aktivni = (dostupne.find(kp => !kp.hotovo) || dostupne[dostupne.length - 1] || h.kapitoly[0] || {}).id;
+
     // svíčky
-    document.getElementById('svicky').innerHTML = h.kapitoly.map((kp, i) => {
-      const barva = kp.poradi === 3 ? '#d9a5e8' : '#7a3fd0';
-      return `<div class="svicka ${kp.hotovo ? 'hori' : ''} ${kp.otevrena ? '' : 'zamceno'}" data-skok="${kp.id}">${SVICKA(barva, kp.hotovo, i * .4)}<div class="d">${OMG.datum(kp.otevreno_od)}</div><div class="t">${OMG.esc(kp.nazev)}</div></div>`;
-    }).join('');
+    document.getElementById('svicky').innerHTML = GIRLANDA + h.kapitoly.map((kp, i) =>
+      `<button type="button" class="svicka ${kp.id === aktivni ? 'vybrana' : ''} ${kp.hotovo ? 'hori' : ''} ${kp.otevrena ? '' : 'zamceno'}" data-skok="${kp.id}" aria-label="${OMG.esc(kp.nazev)}">${SVICKA(kp.id === aktivni, kp.otevrena, kp.hotovo || kp.id === aktivni, i * .4)}<span class="d">${OMG.datum(kp.otevreno_od)}</span></button>`).join('');
 
-    // první vykreslení: rozbalit první otevřenou nedokončenou kapitolu
-    if (prvniVykresleni) {
-      const prvni = h.kapitoly.find(kp => kp.otevrena && !kp.hotovo) || h.kapitoly.filter(kp => kp.otevrena).pop();
-      if (prvni) otevrene.add(prvni.id);
-      prvniVykresleni = false;
-    }
-
-    document.getElementById('kapitoly').innerHTML = h.kapitoly.map(kp => {
-      const stavText = kp.otevrena ? (kp.pocet ? `${kp.vyreseno} / ${kp.pocet} světel` : 'připravuje se') : `otevře se ${OMG.datum(kp.otevreno_od)}`;
-      const telo = kp.otevrena ? `
-        ${kp.uvod ? `<p class="uvod">${OMG.esc(kp.uvod)}</p>` : ''}
+    const kp = h.kapitoly.find(x => x.id === aktivni);
+    document.getElementById('kapitoly').innerHTML = !kp ? '' : (() => {
+      const stavText = kp.pocet ? `${kp.vyreseno} / ${kp.pocet} světel` : 'připravuje se';
+      // Papavilonova řeč: první věta jako nadpis svitku
+      const uvod = String(kp.uvod || ''), m = uvod.match(/^(.{3,60}?[!?.])\s+(.*)$/s);
+      return `<div class="kap" id="kap-${kp.id}" data-id="${kp.id}">
+        <div class="kap-nazev">${OMG.esc(kp.nazev)}${kp.podtitul ? ` · ${OMG.esc(kp.podtitul)}` : ''} · ${stavText}</div>
+        ${uvod ? `<div class="rec"><img class="rec-papavilon" src="/img/hra-papavilon.webp" alt="Papavilon"><div class="svitek">${m ? `<b>${OMG.esc(m[1])}</b>${OMG.esc(m[2])}` : OMG.esc(uvod)}<svg viewBox="-12 -12 24 24" aria-hidden="true">${VLOCKA}</svg></div></div>` : ''}
         ${kp.audio_url ? `<audio controls preload="none" src="${OMG.esc(kp.audio_url)}"></audio>` : ''}
         ${vykresliPismena(kp)}
-        ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<p class="uvod">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</p>'}
-        ${kp.hotovo ? `<div class="alert ok" style="margin-top:14px">Svíčka hoří. Kapitola je dohraná a díl klíče je tvůj.</div>` : ''}` : '';
-      return `<details class="kap ${kp.otevrena ? '' : 'zamcena'}" id="kap-${kp.id}" data-id="${kp.id}" ${otevrene.has(kp.id) && kp.otevrena ? 'open' : ''}>
-        <summary><div><h3>${OMG.esc(kp.nazev)}<small>${OMG.esc(kp.podtitul || '')}</small></h3></div><div class="stav-kap">${stavText}</div></summary>
-        <div class="telo">${telo}</div></details>`;
-    }).join('');
+        ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<div class="svetlo zamceno">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</div>'}
+        ${kp.hotovo ? `<div class="kap-hotovo">Svíčka hoří. Kapitola je dohraná a díl klíče je tvůj.</div>` : ''}
+        ${vykresliAbecedu(kp)}</div>`;
+    })();
 
-    document.querySelectorAll('.kap').forEach(el => el.addEventListener('toggle', () => { if (el.open) otevrene.add(+el.dataset.id); else otevrene.delete(+el.dataset.id); }));
-    document.querySelectorAll('details.abeceda').forEach(el => el.addEventListener('toggle', () => { if (el.open) abcOtevrene.add(+el.dataset.kap); else abcOtevrene.delete(+el.dataset.kap); }));
-    document.querySelectorAll('.kap.zamcena summary').forEach(el => el.addEventListener('click', e => e.preventDefault()));
-    document.querySelectorAll('.svicka').forEach(el => el.addEventListener('click', () => { const d = document.getElementById('kap-' + el.dataset.skok); if (d && !d.classList.contains('zamcena')) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }));
+    document.querySelectorAll('details.abeceda').forEach(el => el.addEventListener('toggle', () => { if (el.open) abcZavrene.delete(+el.dataset.kap); else abcZavrene.add(+el.dataset.kap); }));
+    document.querySelectorAll('.svicka').forEach(el => el.addEventListener('click', () => {
+      const cil = h.kapitoly.find(x => x.id === +el.dataset.skok);
+      if (!cil || !cil.otevrena) { el.classList.remove('ceka-se'); void el.offsetWidth; el.classList.add('ceka-se'); return; }
+      aktivni = cil.id; vybrane = null; vykresliHru();
+    }));
   }
 
   // dlaždice písmena: svítí / čeká / odpočívá ve stínu
@@ -184,7 +208,7 @@
   // ── písmena do tajenky: tým si je sám řadí doleva a doprava ──
   const LS = (klic, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(klic) || 'null'); localStorage.setItem(klic, JSON.stringify(v)); } catch (e) {} return null; };
   let vybrane = null;               // klíč právě vybrané dlaždice
-  const abcOtevrene = new Set();    // kapitoly s rozbalenou abecedou
+  const abcZavrene = new Set();     // kapitoly se sbalenou abecedou
   const kapitola = (id) => stav.hra.kapitoly.find(kp => kp.id === +id);
 
   // dlaždice kapitoly v pořadí, které si tým poskládal (nová písmena přibývají na konec)
@@ -204,26 +228,29 @@
   // řada dlaždic s ovládáním (je nahoře v kapitole i u tajenky)
   function jadroPismen(kp) {
     const dl = dlazdiceKap(kp);
-    if (!dl.length) return '<div class="pis-rada"><span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span></div>';
+    const volna = Math.max(0, (kp.pismen || 0) - dl.filter(d => d.stav !== 'mezera').length);
+    const prazdne = '<span class="pis ceka" aria-hidden="true"></span>'.repeat(volna);
+    if (!dl.length) return `<div class="pis-rada">${prazdne || '<span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span>'}</div>`;
     const vyb = dl.find(d => d.klic === vybrane);
-    return `<div class="pis-rada">${dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="${d.stav === 'mezera' ? 'mezera mezi slovy' : 'písmeno ' + OMG.esc(d.pismeno)}">${d.stav === 'mezera' ? '␣' : OMG.esc(d.pismeno)}</button>`).join('')}</div>
+    return `<div class="pis-rada">${dl.map(d => `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="${d.stav === 'mezera' ? 'mezera mezi slovy' : 'písmeno ' + OMG.esc(d.pismeno)}">${d.stav === 'mezera' ? '␣' : OMG.esc(d.pismeno)}</button>`).join('')}${prazdne}</div>
       ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
       <div class="pis-pozn">${vyb ? (vyb.stav === 'mezera' ? 'Mezera odděluje slova. Posuň ji tam, kde jedno slovo končí.' : 'Posouvej vybrané písmeno doleva nebo doprava.') : 'Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova.'}</div>` : ''}`;
   }
 
-  // nad světly kapitoly: posbíraná písmena a Papavilonova abeceda
+  // panel s posbíranými písmeny
   function vykresliPismena(kp) {
+    if (!(kp.stanoviste || []).some(s => s.typ === 'znameni')) return '';
+    return `<div class="panel pismena"><div class="panel-stitek">PÍSMENA DO TAJENKY</div>
+        <div class="pis-jadro" data-kap="${kp.id}">${jadroPismen(kp)}</div></div>`;
+  }
+  // Papavilonova abeceda: čísla a jejich písmena
+  function vykresliAbecedu(kp) {
     if (!(kp.stanoviste || []).some(s => s.typ === 'znameni')) return '';
     const sviti = new Set((kp.stanoviste || []).flatMap(s => s.znameni || []).filter(z => z.stav === 'sviti').map(z => z.pismeno));
     const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((p, i) => `<div class="${sviti.has(p) ? 'sviti' : ''}"><b>${p}</b><span>${i + 1}</span></div>`).join('');
-    return `<div class="pismena">
-        <div class="pis-nadpis">PÍSMENA DO TAJENKY</div>
-        <div class="pis-jadro" data-kap="${kp.id}">${jadroPismen(kp)}</div>
-        <details class="abeceda" data-kap="${kp.id}" ${abcOtevrene.has(kp.id) ? 'open' : ''}><summary>Papavilonova abeceda</summary>
-          <p>Každé číslo ukrývá písmeno. Jednička je A, dvojka B a tak dál až k Z s číslem 26. Číslo, které najdete, převeďte na písmeno a zapište ho ke znamení.</p>
-          <div class="abc">${abc}</div>
-        </details>
-      </div>`;
+    return `<details class="panel abeceda" data-kap="${kp.id}" ${abcZavrene.has(kp.id) ? '' : 'open'}><summary class="panel-stitek">PAPAVILONOVA ABECEDA<svg viewBox="0 0 20 12" aria-hidden="true"><path d="M2 2l8 8 8-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <p>Číslo, které najdete, převeďte na písmeno a zapište ho ke znamení.</p>
+        <div class="abc">${abc}</div></details>`;
   }
 
   // po posunu stačí překreslit řady dlaždic a náhled tajenky
@@ -237,6 +264,7 @@
     const hlava = '<div class="zn-stav stin"><b>Tři pokusy jsou vyčerpané a písmeno zůstalo skryté.</b> Papavilon ho rozzáří za dobrý skutek.</div>';
     if (!z.skutek) return `${hlava}<div class="akce"><button class="btn mala" data-akce="skutek_vyber" data-id="${s.id}" data-z="${z.id}">Chci dobrý skutek</button></div>`;
     return `${hlava}<div class="skutek"><div class="sk-nadpis">VÁŠ DOBRÝ SKUTEK</div><div class="sk-text">${OMG.esc(z.skutek)}</div>
+      <div class="sk-kdo">Vyberte jednoho z týmu, kdo skutek udělá. Střihněte si o to kámen, nůžky, papír!</div>
       <textarea id="sk-${s.id}-${z.id}" maxlength="300" placeholder="Jednou větou napište, co jste udělali."></textarea>
       <div class="akce"><button class="btn mala" data-akce="skutek_hotovo" data-id="${s.id}" data-z="${z.id}">Skutek je hotový</button><button class="btn sec mala" data-akce="skutek_vyber" data-jiny="1" data-id="${s.id}" data-z="${z.id}">Vylosovat jiný</button></div></div>`;
   }
@@ -248,18 +276,19 @@
 
   function vykresliZnameni(s, jen) {
     return `<div class="znameni">${(s.znameni || []).filter(z => !jen || z.stav === jen).map(z => {
-      const tecky = z.stav === 'ceka' ? `<div class="zn-pokusy"><span class="tecky">${'●'.repeat(z.zbyva)}${'○'.repeat(3 - z.zbyva)}</span> ${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}</div>` : '';
+      const tecky = z.stav === 'ceka' ? `<div class="tecky" role="img" aria-label="${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}">${'<i></i>'.repeat(z.zbyva)}${'<i class="pryc"></i>'.repeat(3 - z.zbyva)}</div>` : '';
       const telo = z.stav === 'ceka'
-        ? `<div class="radek"><input type="text" class="zn-vstup" id="odp-${s.id}-${z.id}" placeholder="písmeno" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="send" maxlength="3"><button class="btn mala" data-akce="znameni" data-id="${s.id}" data-z="${z.id}">Rozzářit</button></div>${tecky}`
+        ? `<div class="radek"><input type="text" class="zn-vstup" id="odp-${s.id}-${z.id}" aria-label="písmeno" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="send" maxlength="3"><button class="btn rozzarit" data-akce="znameni" data-id="${s.id}" data-z="${z.id}">Rozzářit</button>${tecky}</div>`
         : (z.stav === 'sviti' ? `<div class="zn-stav ok">${z.skutkem ? '♥ Písmeno rozzářil dobrý skutek' : '✓ Písmeno svítí'}</div>` : skutekKarta(s, z));
-      return `<div class="znam ${z.stav}" id="zn-${s.id}-${z.id}">${dlazdice(z, jen ? '' : `pd-${s.id}-${z.id}`)}<div class="zn-telo"><div class="zn-zadani">${OMG.esc(z.zadani || '')}</div>${telo}<div class="zprava" id="zpr-${s.id}-${z.id}"></div></div></div>`;
+      return `<div class="znam ${z.stav}" id="zn-${s.id}-${z.id}">${z.stav === 'ceka' ? '' : dlazdice(z, jen ? '' : `pd-${s.id}-${z.id}`)}<div class="zn-telo"><div class="zn-zadani">${OMG.esc(z.zadani || '')}</div>${telo}<div class="zprava" id="zpr-${s.id}-${z.id}"></div></div></div>`;
     }).join('')}</div>`;
   }
 
   function vykresliSvetlo(s, kp) {
     if (s.stav === 'zamceno') return `<div class="svetlo zamceno">✦ ${s.poradi}. světlo se ukáže, až rozsvítíš předchozí.</div>`;
-    const hlava = `<h4>${s.poradi}. ${OMG.esc(s.nazev)}</h4>
-      ${s.misto ? `<div class="misto">📍 ${OMG.esc(s.misto)}</div>` : ''}`;
+    const PIN = '<svg viewBox="0 0 20 26" aria-hidden="true"><path d="M10 25C4 16 1 12.5 1 9a9 9 0 0118 0c0 3.500-3 7-9 16z" fill="#c9302c" stroke="#7d1512" stroke-width="1"/><circle cx="10" cy="9" r="3.4" fill="#fff"/></svg>';
+    const hlava = `<div class="sv-hlava">${s.obrazek_url ? `<img class="sv-obr" src="${OMG.esc(s.obrazek_url)}" alt="" loading="lazy">` : ''}<div class="sv-nadpis"><h4>${s.poradi}. ${OMG.esc(s.nazev)}</h4>
+      ${s.misto ? `<div class="misto">${PIN}${OMG.esc(s.misto)}</div>` : ''}</div></div><div class="sv-linka"><b></b></div>`;
     const obnov = s.typ === 'znameni' && jeSpravce() ? `<div class="akce"><button class="btn sec mala" data-akce="znameni_obnov" data-id="${s.id}">Vrátit pokusy (správce)</button></div>` : '';
     if (s.typ === 'znameni' && (s.stav === 'vyreseno' || s.stav === 'preskoceno')) {
       const vse = (s.znameni || []).every(z => z.stav === 'sviti');
@@ -268,7 +297,7 @@
     if (s.stav === 'vyreseno' || s.stav === 'preskoceno') {
       return `<div class="svetlo vyreseno" id="svetlo-${s.id}">${hlava}<div class="hotovo">${s.stav === 'vyreseno' ? '✓ Rozsvíceno' : '→ Přeskočeno'}${s.odpoved ? ` · ${s.typ === 'krystal' ? 'krystaly' : 'odpověď'}: <b>${OMG.esc(s.odpoved)}</b>` : ''}</div></div>`;
     }
-    const media = `${s.obrazek_url ? `<img src="${OMG.esc(s.obrazek_url)}" alt="" loading="lazy">` : ''}${s.audio_url ? `<audio controls preload="none" src="${OMG.esc(s.audio_url)}"></audio>` : ''}`;
+    const media = `${s.audio_url ? `<audio controls preload="none" src="${OMG.esc(s.audio_url)}"></audio>` : ''}`;
     if (s.typ === 'krystal') {
       const hraci = stav.tym.hraci || [];
       return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}
@@ -280,17 +309,17 @@
     }
     if (s.typ === 'tajenka') {
       return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}
-        <div class="pismena taj"><div class="pis-jadro" data-kap="${kp.id}">${jadroPismen(kp)}</div></div>
+        <div class="panel pismena taj"><div class="pis-jadro" data-kap="${kp.id}">${jadroPismen(kp)}</div></div>
         <div class="taj-popis">TVOJE TAJENKA</div><div class="taj-nahled" data-kap="${kp.id}">${OMG.esc(slozene(kp) || '…')}</div>${cekaNaSkutek(kp)}
         <div class="akce"><button class="btn mala" data-akce="odpoved" data-id="${s.id}" data-taj="${kp.id}">Odeslat tajenku</button>
-          ${s.pokusy ? `<span style="font-size:15px;color:#a99cc7">pokusů: ${s.pokusy}</span>` : ''}</div>
+          ${s.pokusy ? `<span class="pokusu">pokusů: ${s.pokusy}</span>` : ''}</div>
         <div class="zprava" id="zpr-${s.id}"></div></div>`;
     }
     const akce = s.typ === 'info'
       ? `<div class="akce"><button class="btn mala" data-akce="hotovo" data-id="${s.id}">Pokračovat</button></div>`
       : `<div class="radek"><input type="text" id="odp-${s.id}" placeholder="tvoje odpověď" autocomplete="off" enterkeyhint="send"><button class="btn mala" data-akce="odpoved" data-id="${s.id}">Odeslat</button></div>
          <div class="akce">
-           ${s.pokusy ? `<span style="font-size:15px;color:#a99cc7">pokusů: ${s.pokusy}</span>` : ''}
+           ${s.pokusy ? `<span class="pokusu">pokusů: ${s.pokusy}</span>` : ''}
          </div>`;
     return `<div class="svetlo" id="svetlo-${s.id}">${hlava}<div class="zadani">${OMG.esc(s.zadani || '')}</div>${media}${akce}<div class="zprava" id="zpr-${s.id}"></div></div>`;
   }
