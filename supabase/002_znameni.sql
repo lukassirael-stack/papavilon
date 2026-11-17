@@ -25,7 +25,7 @@ insert into public.omg_stanoviste (kapitola_id, poradi, typ, nazev, misto, zadan
 select k.id, v.poradi, v.typ, v.nazev, v.misto, v.zadani, v.napoveda, v.znameni::jsonb, v.odpovedi
 from public.omg_kapitoly k
 cross join (values
-  (1, 'znameni', 'Voda, kámen a světlo', 'Velké náměstí',
+  (1, 'znameni', 'Velké náměstí', null,
    'Tady začíná vaše cesta. Voda, kámen a světlo střeží první tři znamení.',
    'V erbu žijí lvi a orli. Lampy počítejte ty, které vyrůstají ze země.',
    '[{"id":"z1","pismeno":"D","odpovedi":["4","čtyři"],"zadani":"Obejděte kašnu a spočítejte její rohy."},
