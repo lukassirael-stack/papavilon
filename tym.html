@@ -185,7 +185,7 @@
       const uvod = String(kp.uvod || ''), m = uvod.match(/^(.{3,60}?[!?.])\s+(.*)$/s);
       return `<div class="kap" id="kap-${kp.id}" data-id="${kp.id}">
         <div class="kap-nazev">${OMG.esc(kp.nazev)}${kp.podtitul ? ` · ${OMG.esc(kp.podtitul)}` : ''} · ${stavText}</div>
-        ${uvod ? `<div class="rec"><img class="rec-papavilon" src="/img/hra-papavilon.webp" alt="Papavilon"><div class="svitek">${m ? `<b>${OMG.esc(m[1])}</b>${OMG.esc(m[2])}` : OMG.esc(uvod)}<svg viewBox="-12 -12 24 24" aria-hidden="true">${VLOCKA}</svg></div></div>` : ''}
+        ${uvod ? `<div class="rec"><img class="rec-papavilon" src="/img/hra-papavilon-${Math.min(Math.max(kp.poradi || 1, 1), 4)}.webp" alt="Papavilon"><div class="svitek">${m ? `<b>${OMG.esc(m[1])}</b>${OMG.esc(m[2])}` : OMG.esc(uvod)}<svg viewBox="-12 -12 24 24" aria-hidden="true">${VLOCKA}</svg></div></div>` : ''}
         ${kp.audio_url ? `<audio controls preload="none" src="${OMG.esc(kp.audio_url)}"></audio>` : ''}
         ${vykresliPismena(kp)}
         ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<div class="svetlo zamceno">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</div>'}
