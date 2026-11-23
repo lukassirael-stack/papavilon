@@ -641,6 +641,7 @@ body.bez-posunu{overflow:hidden}
 .oslava-rec{margin:14px 0 16px;font-size:20px;line-height:1.35;font-style:italic;font-weight:600;color:#fff3d6}
 .oslava-dalsi{margin-top:14px;font-size:17px;color:#e9dcc0}
 .oslava-dal{margin-top:16px;min-width:210px;font-size:22px}
+.oslava-hlas{display:block;margin:14px auto 0}
 .oslava-jiskry{position:fixed;inset:0;overflow:hidden;pointer-events:none}
 .oslava-jiskry i{position:absolute;top:-12px;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#fff6c8,#ffc93a 60%,transparent 70%);box-shadow:0 0 10px rgba(255,210,100,.9);animation:pad linear infinite}
 .oslava-jiskry i:nth-child(3n){width:5px;height:5px}

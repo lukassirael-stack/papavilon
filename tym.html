@@ -311,6 +311,16 @@
       <p class="pos-uvod">${mam ? `${mam === casti.length ? 'Všechny části jsou pohromadě.' : `Máš ${mam} ${mam === 1 ? 'část' : 'části'} ze ${casti.length}.`}` : `Poselství má ${casti.length} části. Každou adventní neděli se otevře cesta k další.`}</p>
       ${radaPoselstvi()}</div>`;
   }
+  // Papavilonův hlas při oslavě (podle pořadí kapitoly); připraví se při odeslání tajenky, ať se smí rozeznít sám
+  const HLAS_OSLAVY = { 1: '/audio/papavilon-oslava-1.mp3' };
+  let hlas = null;
+  function pripravHlas(kp) {
+    const src = kp && HLAS_OSLAVY[kp.poradi]; hlas = null; if (!src) return;
+    try {
+      const a = new Audio(src); a.preload = 'auto'; a.muted = true; hlas = a;
+      const p = a.play(); if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; });
+    } catch (e) { hlas = null; }
+  }
   // oslava po složení tajenky: celá obrazovka, ať je jasné, že část poselství zapadla
   function oslava(kp) {
     const casti = castiPoselstvi(), i = casti.findIndex(c => c.kp.id === kp.id), ja = casti[i] || {}, mam = casti.filter(c => c.slova).length, zbyva = casti.length - mam;
@@ -325,9 +335,18 @@
       <p class="oslava-rec">„Výborně, poutníci! ${OMG.esc(kp.nazev)} hoří a ${(RADOVE[i] || '').toLowerCase()} část mého poselství je vaše. ${zbyva === 0 ? 'Všechny části jsou pohromadě!' : zbyva === 1 ? 'Čeká na vás ještě jedna.' : zbyva === 2 ? 'Čekají na vás ještě dvě.' : zbyva === 3 ? 'Čekají na vás ještě tři.' : `Čeká na vás ještě ${zbyva} dalších.`}“</p>
       ${radaPoselstvi(kp.id)}
       ${zbyva ? `<p class="oslava-dalsi">${rozehrana ? `${OMG.esc(rozehrana.kp.nazev)} je otevřená, další část čeká na tvoji tajenku.` : (dalsi ? `Cesta k další části se otevře ${OMG.datum(dalsi.kp.otevreno_od)}` : '')}</p>` : ''}
+      ${HLAS_OSLAVY[kp.poradi] ? '<button type="button" class="btn sec mala oslava-hlas" aria-label="Papavilonův hlas">▶ Poslechni si Papavilona</button>' : ''}
       <button type="button" class="btn oslava-dal">Pokračovat</button></div>`;
     document.body.appendChild(el); document.body.classList.add('bez-posunu');
-    const zavri = () => { el.remove(); document.body.classList.remove('bez-posunu'); const p = document.getElementById('poselstvi'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+    const tl = el.querySelector('.oslava-hlas');
+    if (tl) {
+      const a = (hlas && hlas.src.endsWith(HLAS_OSLAVY[kp.poradi])) ? hlas : new Audio(HLAS_OSLAVY[kp.poradi]); hlas = a; a.muted = false;
+      const popis = () => { tl.textContent = a.paused ? '▶ Poslechni si Papavilona' : '❚❚ Papavilon mluví'; };
+      ['play', 'pause', 'ended'].forEach(u => a.addEventListener(u, popis));
+      tl.addEventListener('click', () => { if (a.paused) { if (a.ended) a.currentTime = 0; a.play().catch(() => {}); } else a.pause(); });
+      setTimeout(() => { try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }, 500);
+    }
+    const zavri = () => { if (hlas) { try { hlas.pause(); } catch (e) {} } el.remove(); document.body.classList.remove('bez-posunu'); const p = document.getElementById('poselstvi'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
     el.querySelector('.oslava-dal').addEventListener('click', zavri);
     el.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri(); });
     el.querySelector('.oslava-dal').focus();
@@ -438,6 +457,7 @@
     const odpoved = b.dataset.taj ? slozene(kapitola(b.dataset.taj)) : (vstup ? vstup.value.trim() : '');
     const krystaly = akce === 'krystaly' ? [...document.querySelectorAll(`#svetlo-${id} .h-kr`)].map((i) => i.value) : undefined;
     if (akce === 'odpoved' && b.dataset.taj && !odpoved) { zprava(id, 'Nejdřív poskládej písmena.', false); return; }
+    if (akce === 'odpoved' && b.dataset.taj) pripravHlas(kapitola(b.dataset.taj));
     const sPopisem = akce === 'skutek_hotovo' || akce === 'rada_hotovo';
     const popisEl = sPopisem ? document.getElementById('sk-' + id + '-' + (zid || 'rada')) : null, popis = popisEl ? popisEl.value.trim() : undefined;
     if (sPopisem && popis.length < 10) { zprava(zid ? id + '-' + zid : id, 'Napište aspoň jednou větou, co jste udělali.', false); return; }
