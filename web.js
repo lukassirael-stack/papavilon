@@ -51,3 +51,31 @@ window.OMG = {
 
   datum(iso) { const d = new Date(iso); return `${d.getDate()}. ${d.getMonth() + 1}.`; },
 };
+
+/* Návštěvnost: anonymní měření bez cookies. Počítá zobrazení stránek a dobu na stránce;
+   správce (přihlášený do /sprava) a automatické prohlížeče se nepočítají. */
+(function () {
+  try {
+    if (localStorage.getItem('omg_admin_key') || navigator.webdriver || location.pathname.indexOf('/sprava') === 0) return;
+    var relace = sessionStorage.getItem('omg_relace');
+    if (!relace) { relace = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(36).slice(2, 12)); sessionStorage.setItem('omg_relace', relace); }
+    var q = new URLSearchParams(location.search), ref = '';
+    try { var h = document.referrer ? new URL(document.referrer).hostname : ''; if (h && h !== location.hostname) ref = h.replace(/^www\./, ''); } catch (e) {}
+    var zdroj = q.get('utm_source') || (q.get('fbclid') ? 'facebook' : '') || sessionStorage.getItem('omg_zdroj') || '';
+    if (zdroj) sessionStorage.setItem('omg_zdroj', zdroj);
+    var s = Math.min(window.innerWidth, screen.width || 9999), zarizeni = s < 700 ? 'mobil' : (s < 1100 ? 'tablet' : 'desktop');
+    var id = null, viditelne = 0, od = document.visibilityState === 'visible' ? Date.now() : 0;
+    fetch('/api/navsteva', { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+      body: JSON.stringify({ relace: relace, stranka: location.pathname, referrer: ref, zdroj: zdroj, zarizeni: zarizeni }) })
+      .then(function (r) { return r.json(); }).then(function (d) { id = d && d.id; }).catch(function () {});
+    var posli = function () {
+      if (od) { viditelne += Date.now() - od; od = 0; }
+      if (!id) return;
+      var telo = JSON.stringify({ id: id, relace: relace, doba: Math.round(viditelne / 1000) });
+      if (navigator.sendBeacon) navigator.sendBeacon('/api/navsteva', new Blob([telo], { type: 'application/json' }));
+      else fetch('/api/navsteva', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: telo, keepalive: true }).catch(function () {});
+    };
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') posli(); else od = Date.now(); });
+    window.addEventListener('pagehide', posli);
+  } catch (e) {}
+})();

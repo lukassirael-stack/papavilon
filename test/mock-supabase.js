@@ -3,11 +3,11 @@ import { randomUUID, randomBytes } from 'node:crypto';
 
 const DB = {
   omg_tymy: [], omg_kapitoly: [], omg_stanoviste: [], omg_pokrok: [], omg_pokusy: [],
-  omg_los_zdarma: [],
+  omg_los_zdarma: [], omg_navstevy: [],
   nastaveni: [{ klic: 'omg_registrace_od', hodnota: '2026-11-27T00:00:00+01:00' }],
 };
 let vsSeq = 26120001, kapSeq = 1, stanSeq = 100, pokusSeq = 1;
-const PK = { omg_tymy: ['id'], omg_kapitoly: ['id'], omg_stanoviste: ['id'], omg_pokrok: ['tym_id', 'stanoviste_id'], omg_pokusy: ['id'], nastaveni: ['klic'], omg_los_zdarma: ['id'] };
+const PK = { omg_tymy: ['id'], omg_kapitoly: ['id'], omg_stanoviste: ['id'], omg_pokrok: ['tym_id', 'stanoviste_id'], omg_pokusy: ['id'], nastaveni: ['klic'], omg_los_zdarma: ['id'], omg_navstevy: ['id'] };
 
 function defaults(table, row) {
   const now = new Date().toISOString();
@@ -16,7 +16,7 @@ function defaults(table, row) {
   if (table === 'omg_stanoviste') return { id: stanSeq++, poradi: 1, typ: 'odpoved', misto: null, zadani: null, napoveda: null, audio_url: null, obrazek_url: null, odpovedi: [], znameni: [], body: 100, srazka_napoveda: 20, aktivni: true, created_at: now, ...row };
   if (table === 'omg_pokrok') return { pokusy: 0, napoveda_at: null, vyreseno_at: null, preskoceno: false, odpoved: null, body: 0, znameni: {}, ...row };
   if (table === 'omg_los_zdarma') return { id: (DB.omg_los_zdarma.length + 1), created_at: now, ...row };
-  if (table === 'omg_tymy' && false) {}
+  if (table === 'omg_navstevy') return { id: (DB.omg_navstevy.length + 1), doba_s: 0, created_at: now, ...row };
   if (table === 'omg_pokusy') return { id: pokusSeq++, created_at: now, ...row };
   return row;
 }

@@ -70,7 +70,7 @@
   </section>
 
   <section id="obsah" class="skryt">
-    <div class="taby"><button class="akt" data-tab="tymy">Týmy</button><button data-tab="hra">Obsah hry</button><button data-tab="los">Losování</button></div>
+    <div class="taby"><button class="akt" data-tab="tymy">Týmy</button><button data-tab="hra">Obsah hry</button><button data-tab="los">Losování</button><button data-tab="nav">Návštěvnost</button></div>
 
     <!-- TÝMY -->
     <div id="tab-tymy">
@@ -127,11 +127,24 @@
       <div class="radek-btn" style="margin-bottom:12px"><button class="btn mala" id="los-nacti">Načíst</button><button class="btn sec mala" id="los-csv">Stáhnout CSV</button><button class="btn sec mala" id="los-tah">Vylosovat jedno číslo</button><span id="los-vysledek" style="font-size:18px;color:var(--gold)"></span></div>
       <div class="card" style="padding:12px"><table class="zeb" id="los-tab"><tbody><tr><td colspan="5">Klikni na Načíst.</td></tr></tbody></table></div>
     </div>
+    <!-- NÁVŠTĚVNOST -->
+    <div id="tab-nav" class="skryt">
+      <p style="margin-bottom:14px;font-size:16px;color:#cdbfa6">Anonymní měření návštěvníků webu. Tvoje vlastní návštěvy z tohoto prohlížeče zůstávají stranou.</p>
+      <div class="radek-btn" style="margin-bottom:12px"><button class="btn mala" data-nav="7">7 dní</button><button class="btn sec mala" data-nav="14">14 dní</button><button class="btn sec mala" data-nav="30">30 dní</button></div>
+      <div class="cisla" id="nav-cisla"></div>
+      <div class="card" style="padding:14px;margin-bottom:14px"><div class="kicker" style="text-align:left;margin-bottom:8px">CESTA KE VSTUPENCE</div><div id="nav-cesta" style="font-size:18px"></div></div>
+      <div class="card" style="padding:12px;margin-bottom:14px"><table class="zeb" id="nav-dny"></table></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+        <div class="card" style="padding:12px"><table class="zeb" id="nav-zdroje"></table></div>
+        <div class="card" style="padding:12px"><table class="zeb" id="nav-stranky"></table></div>
+        <div class="card" style="padding:12px"><table class="zeb" id="nav-zarizeni"></table></div>
+      </div>
+    </div>
   </section>
 </main>
 <div class="toast" id="toast"></div>
 
-<script src="/web.js?v=20261109"></script>
+<script src="/web.js?v=20261123n"></script>
 <script>
 (function(){
   const $ = (s) => document.querySelector(s);
@@ -150,7 +163,7 @@
   $('#odhlasit').addEventListener('click', (e) => { e.preventDefault(); localStorage.removeItem('omg_admin_key'); location.reload(); });
   document.querySelectorAll('.taby button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.taby button').forEach(x => x.classList.toggle('akt', x === b));
-    $('#tab-tymy').classList.toggle('skryt', b.dataset.tab !== 'tymy'); $('#tab-hra').classList.toggle('skryt', b.dataset.tab !== 'hra'); $('#tab-los').classList.toggle('skryt', b.dataset.tab !== 'los'); if (b.dataset.tab === 'los') nactiLos();
+    ['tymy', 'hra', 'los', 'nav'].forEach(t => $('#tab-' + t).classList.toggle('skryt', b.dataset.tab !== t)); if (b.dataset.tab === 'los') nactiLos(); if (b.dataset.tab === 'nav') nactiNav();
   }));
   document.querySelectorAll('.filtry button').forEach(b => b.addEventListener('click', () => { filtr = b.dataset.f; document.querySelectorAll('.filtry button').forEach(x => x.classList.toggle('akt', x === b)); vykresliTymy(); }));
   $('#hledat').addEventListener('input', (e) => { hled = e.target.value.trim().toLowerCase(); vykresliTymy(); });
@@ -258,6 +271,25 @@
   }
   // ── losování ──────────────────────────────────────────────
   let losRadky = [];
+  // návštěvnost webu
+  let navDni = 7;
+  async function nactiNav() {
+    try {
+      const n = await api('navstevnost', { dni: navDni });
+      const cas = (s) => s >= 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`;
+      const proc = (a, b) => b ? ` (${Math.round(a / b * 100)} %)` : '';
+      $('#nav-cisla').innerHTML = `<div><b>${n.celkem.navstevy}</b><span>návštěvy</span></div><div><b>${n.celkem.zobrazeni}</b><span>zobrazení</span></div><div><b>${cas(n.celkem.prumerna_doba_s)}</b><span>průměrně na stránce</span></div>`;
+      const c = n.cesta;
+      $('#nav-cesta').innerHTML = `${c.navstevy} návštěv → ${c.vstupenka} si otevřelo vstupenku${proc(c.vstupenka, c.navstevy)} → ${c.objednavky} objednávek → <b style="color:var(--gold)">${c.zaplaceno} zaplaceno</b>`;
+      const tab = (hlava, radky) => `<thead><tr>${hlava.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${radky.length ? radky.join('') : `<tr><td colspan="${hlava.length}">Zatím žádná data.</td></tr>`}</tbody>`;
+      $('#nav-dny').innerHTML = tab(['Den', 'Návštěvy', 'Zobrazení'], n.dny.map(x => `<tr><td>${OMG.datum(x.den + 'T12:00:00')}</td><td>${x.navstevy}</td><td>${x.zobrazeni}</td></tr>`));
+      const seznam = (el, nazev, pole) => { $(el).innerHTML = tab([nazev, 'Počet'], pole.map(x => `<tr><td>${OMG.esc(x.nazev)}</td><td>${x.pocet}</td></tr>`)); };
+      seznam('#nav-zdroje', 'Odkud přišli', n.zdroje); seznam('#nav-stranky', 'Stránka', n.stranky); seznam('#nav-zarizeni', 'Zařízení', n.zarizeni);
+    } catch (e) { toast(e.message); }
+  }
+  document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
+    navDni = Number(b.dataset.nav); document.querySelectorAll('[data-nav]').forEach(x => x.classList.toggle('sec', x !== b)); nactiNav();
+  }));
   async function nactiLos() {
     try {
       losRadky = (await api('losovani')).radky || [];

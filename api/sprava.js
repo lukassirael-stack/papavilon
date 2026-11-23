@@ -62,6 +62,42 @@ export default async function handler(req, res) {
         if (error) return res.status(400).json({ chyba: error.message });
         return res.status(200).json({ uspech: true, skutky: seznam });
       }
+      case 'navstevnost': {
+        // souhrn návštěvnosti za posledních N dní (dny podle pražského času)
+        const dni = Math.max(1, Math.min(60, Number(d.dni) || 14));
+        const od = new Date(Date.now() - dni * 86400000).toISOString();
+        const radky = []; let posledni = 0;
+        for (let i = 0; i < 40; i++) {
+          const { data: cast, error } = await sb.from('omg_navstevy').select('id, relace, stranka, referrer, zdroj, zarizeni, doba_s, created_at').gt('created_at', od).gt('id', posledni).order('id', { ascending: true }).limit(1000);
+          if (error) return res.status(400).json({ chyba: error.message });
+          radky.push(...(cast || [])); if (!cast || cast.length < 1000) break; posledni = cast[cast.length - 1].id;
+        }
+        const denPraha = (iso) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Prague' }).format(new Date(iso));
+        const dny = new Map(), stranky = new Map(), zdroje = new Map(), zarizeni = new Map(), relace = new Set(), uVstupenky = new Set(), prvni = new Map();
+        let doba = 0, sDobou = 0;
+        for (const r of radky) {
+          const den = denPraha(r.created_at); if (!dny.has(den)) dny.set(den, { den, zobrazeni: 0, r: new Set() });
+          dny.get(den).zobrazeni++; dny.get(den).r.add(r.relace);
+          stranky.set(r.stranka, (stranky.get(r.stranka) || 0) + 1);
+          relace.add(r.relace); if (r.stranka === '/vstupenka') uVstupenky.add(r.relace);
+          if (!prvni.has(r.relace)) prvni.set(r.relace, r);
+          if (r.doba_s > 0) { doba += r.doba_s; sDobou++; }
+        }
+        for (const r of prvni.values()) {
+          const z = r.zdroj || r.referrer || 'přímo / odkaz'; zdroje.set(z, (zdroje.get(z) || 0) + 1);
+          const k = r.zarizeni || 'jiné'; zarizeni.set(k, (zarizeni.get(k) || 0) + 1);
+        }
+        const { data: tymy } = await sb.from('omg_tymy').select('stav, zdroj, created_at').eq('hra', HRA).gt('created_at', od);
+        const objednavky = (tymy || []).filter((t) => t.zdroj !== 'sprava');
+        const top = (m, n) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([nazev, pocet]) => ({ nazev, pocet }));
+        return res.status(200).json({
+          dni,
+          celkem: { navstevy: relace.size, zobrazeni: radky.length, prumerna_doba_s: sDobou ? Math.round(doba / sDobou) : 0 },
+          dny: [...dny.values()].sort((a, b) => b.den.localeCompare(a.den)).map((x) => ({ den: x.den, navstevy: x.r.size, zobrazeni: x.zobrazeni })),
+          stranky: top(stranky, 10), zdroje: top(zdroje, 10), zarizeni: top(zarizeni, 4),
+          cesta: { navstevy: relace.size, vstupenka: uVstupenky.size, objednavky: objednavky.length, zaplaceno: objednavky.filter((t) => t.stav === 'zaplaceno').length },
+        });
+      }
       case 'skutky.kronika': {
         const [{ data: radky }, { data: tymy }] = await Promise.all([
           sb.from('omg_pokrok').select('tym_id, stanoviste_id, znameni'),
