@@ -214,13 +214,15 @@
   const abcZavrene = new Set();     // kapitoly se sbalenou abecedou
   const kapitola = (id) => stav.hra.kapitoly.find(kp => kp.id === +id);
 
+  // pořadí písmen si prohlížeč pamatuje zvlášť pro každý tým a kapitolu
+  const klicPoradi = (kp) => 'omg_poradi_' + String(k).slice(0, 8) + '_' + kp.id;
   // dlaždice kapitoly v pořadí, které si tým poskládal (nová písmena přibývají na konec)
   function dlazdiceKap(kp) {
     const vse = [];
     (kp.stanoviste || []).forEach(s => (s.znameni || []).forEach(z => {
       if (z.stav === 'sviti') vse.push({ klic: s.id + ':' + z.id, stav: 'sviti', pismeno: z.pismeno });
     }));
-    const poradi = LS('omg_poradi_' + kp.id) || [];
+    const poradi = LS(klicPoradi(kp)) || [];
     const misto = (k) => { const n = poradi.indexOf(k); return n < 0 ? 1e6 : n; };
     const razene = vse.map((d, n) => ({ d, n })).sort((a, b) => misto(a.d.klic) - misto(b.d.klic) || a.n - b.n).map(x => x.d);
     // písmena usazená Papavilonovou radou stojí pevně na svém místě
@@ -480,7 +482,7 @@
       while (kam >= 0 && kam < rada.length && rada[kam].usazene) kam += krok;
       if (odkud < 0 || kam < 0 || kam >= klice.length) return;
       [klice[odkud], klice[kam]] = [klice[kam], klice[odkud]];
-      LS('omg_poradi_' + kp.id, klice); prekresliPismena(kp);
+      LS(klicPoradi(kp), klice); prekresliPismena(kp);
     }
   });
   document.getElementById('kapitoly').addEventListener('keydown', (e) => {
