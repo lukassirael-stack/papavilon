@@ -361,7 +361,7 @@
   }
 
   function vykresliZnameni(s, jen) {
-    const navod = !jen && (s.znameni || []).some(z => z.stav === 'ceka') ? '<button type="button" class="zn-navod" data-abeceda="1"><b>Jak na to:</b> číslo, které vám vyjde, vyhledejte dole v Papavilonově abecedě. Písmeno nad ním zapište sem do políčka. Máte tři pokusy, pak písmeno rozzáří vánoční dobrý skutek. <u>Ukázat abecedu ↓</u></button>' : '';
+    const navod = !jen && (s.znameni || []).some(z => z.stav === 'ceka') ? '<button type="button" class="zn-navod" data-abeceda="1"><b>Jak na to:</b> číslo, které vám vyjde, vyhledejte dole v Papavilonově abecedě. Písmeno nad ním zapište sem do políčka. Máte tři pokusy. Když se to nepovede, nevadí, písmeno rozzáří vánoční dobrý skutek. <u>Ukázat abecedu ↓</u></button>' : '';
     return `<div class="znameni">${navod}${(s.znameni || []).filter(z => !jen || z.stav === jen).map(z => {
       const tecky = z.stav === 'ceka' ? `<div class="tecky" role="img" aria-label="${z.zbyva === 1 ? 'zbývá poslední pokus' : `zbývají ${z.zbyva} pokusy`}">${'<i></i>'.repeat(z.zbyva)}${'<i class="pryc"></i>'.repeat(3 - z.zbyva)}</div>` : '';
       const telo = z.stav === 'ceka'

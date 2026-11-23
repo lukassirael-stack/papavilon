@@ -240,6 +240,11 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 .odpocet span{font-size:14px;color:#cdbfa6;letter-spacing:.08em;text-transform:uppercase}
 footer{padding:34px 20px 44px;text-align:center;color:#a99cc7;font-size:16px;border-top:1px solid rgba(246,198,106,.15);background:#0a0f34}
 footer a{color:var(--gold)}
+.napis{margin:18px auto 0;max-width:520px}
+.napis summary{list-style:none;cursor:pointer;display:inline-block}
+.napis summary::-webkit-details-marker{display:none}
+.napis[open] summary{margin-bottom:14px}
+.napis form{text-align:left;position:relative}
 footer .odkazy{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;margin-top:12px}
 
 /* ── podstránky ────────────────────────────────────────────────── */

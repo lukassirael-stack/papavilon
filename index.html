@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261123b">
+<link rel="stylesheet" href="/styl.css?v=20261123c">
 </head>
 <body>
 <section class="hero" id="hero">
@@ -149,7 +149,7 @@
       <div class="adv-date" style="left:60%"><b>13. 12.</b><span>3. kapitola</span></div>
       <div class="adv-date" style="left:74.5%"><b>20. 12.</b><span>4. kapitola</span></div>
     </div>
-    <div class="adv-final"><b>24. 12. v 10:00</b> přichází velké finále.<br>Papavilon vylosuje svůj kouzelný artefakt a další vánoční dary.</div>
+    <div class="adv-final"><b>24. 12. v 10:00</b> přichází velké finále.<br>Papavilon vylosuje svůj kouzelný artefakt a další vánoční dary.<br>Výherce oznámíme zde na Štědrý den v 11:00 hod.</div>
   </div>
   <div class="wrap advent-text">
     <div class="adv-mobil-box"><img class="adv-mobil" src="/img/advent-mobil-zhasnute.webp" alt="Čtyři svíčky, čtyři kapitoly: 29. 11. první kapitola, 6. 12. druhá, 13. 12. třetí, 20. 12. čtvrtá" width="959" height="1639" loading="lazy">
@@ -167,7 +167,7 @@
       <div class="candle"><svg viewBox="0 0 70 120"><path class="flame" d="M35 8c7 10 8 18 0 26-8-8-7-16 0-26z" fill="#ffd36b" style="animation-delay:.8s"/><rect x="22" y="38" width="26" height="74" rx="5" fill="#d9a5e8"/><rect x="22" y="38" width="8" height="74" rx="4" fill="#ecc6f4"/></svg><div class="d">13. 12.</div><div class="t">3. kapitola</div></div>
       <div class="candle"><svg viewBox="0 0 70 120"><path class="flame" d="M35 8c7 10 8 18 0 26-8-8-7-16 0-26z" fill="#ffd36b" style="animation-delay:1.2s"/><rect x="22" y="38" width="26" height="74" rx="5" fill="#7a3fd0"/><rect x="22" y="38" width="8" height="74" rx="4" fill="#9c66ea"/></svg><div class="d">20. 12.</div><div class="t">4. kapitola</div></div>
     </div>
-    <div class="final"><b>24. 12. v 10:00</b> přichází velké finále. Papavilon vylosuje svůj kouzelný artefakt a další vánoční dary.</div>
+    <div class="final"><b>24. 12. v 10:00</b> přichází velké finále. Papavilon vylosuje svůj kouzelný artefakt a další vánoční dary. Výherce oznámíme zde na Štědrý den v 11:00 hod.</div>
   </div>
 </section>
 
@@ -220,7 +220,7 @@
       <details><summary>Kdy můžeme hrát?</summary><p>Kdykoli během adventu, ve dne i večer. Kapitoly se otevírají každou adventní neděli a zůstávají otevřené až do 24. 12.</p></details>
       <details><summary>Kolik lidí může být v týmu?</summary><p>V jednom týmu hrají až 4 hráči, tým lze rozšířit až na 6 hráčů. Tým hraje s jedním telefonem a při registraci napíše jméno a věk každého hráče.</p></details>
       <details><summary>Jak se platí?</summary><p>Kartou, Apple Pay nebo Google Pay přes zabezpečenou platbu. Hned po zaplacení přijde e-mail s odkazem do hry.</p></details>
-      <details><summary>Jak se losují ceny?</summary><p>Na Štědrý den v 10:00 Papavilon losuje ze všech hráčů, kteří došli do cíle. S Papavilonovou radou a vánočními dobrými skutky tam dojde každý tým. Hraje se o Papavilonův kouzelný artefakt a další vánoční dary. Pravidla najdeš na stránce <a href="/pravidla" style="color:var(--gold)">Pravidla hry</a>.</p></details>
+      <details><summary>Jak se losují ceny?</summary><p>Na Štědrý den v 10:00 Papavilon losuje ze všech hráčů, kteří došli do cíle. S Papavilonovou radou a vánočními dobrými skutky tam dojde každý tým. Hraje se o Papavilonův kouzelný artefakt a další vánoční dary. Výherce oznámíme na tomto webu na Štědrý den v 11:00. Pravidla najdeš na stránce <a href="/pravidla" style="color:var(--gold)">Pravidla hry</a>.</p></details>
     </div>
   </div>
 </section>
@@ -248,7 +248,18 @@
   <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Venkovní interaktivní hry · Kroměříž</p>
   <p style="margin-top:10px">Hry s Papavilonem pro tebe tvoří <a href="https://oaza-adamanthea.cz" target="_blank" rel="noopener"><b>Oáza Adamanthea</b></a>, Crystal &amp; Retreat centrum v Halenkovicích.</p>
   <p style="margin-top:4px">IČO 76564410 · <a href="https://oaza-adamanthea.cz" target="_blank" rel="noopener">oaza-adamanthea.cz</a></p>
-  <p style="margin-top:8px">Napiš nám: <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
+  <details class="napis" id="napis">
+    <summary class="btn sec">Napiš nám</summary>
+    <form class="card form" id="napis-f" novalidate>
+      <div class="pole"><label for="n-jmeno">JMÉNO</label><input type="text" id="n-jmeno" maxlength="80" autocomplete="name" placeholder="jak ti máme říkat"></div>
+      <div class="pole"><label for="n-email">E-MAIL</label><input type="email" id="n-email" required autocomplete="email" inputmode="email" placeholder="sem ti odpovíme"></div>
+      <div class="pole"><label for="n-zprava">ZPRÁVA</label><textarea id="n-zprava" rows="5" maxlength="3000" required placeholder="Na co se chceš zeptat?"></textarea></div>
+      <input type="text" id="n-web" name="web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <div id="n-hlaska" class="alert skryt"></div>
+      <button class="btn plna" type="submit" id="n-btn">Odeslat zprávu</button>
+    </form>
+  </details>
+  <p style="margin-top:12px">E-mail: <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
   <div class="odkazy"><a href="/pravidla">Pravidla hry</a><a href="/tym">Můj tým</a><a href="/odkaz">Zapomenutý odkaz</a></div>
 </footer>
 
@@ -270,6 +281,26 @@
     OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, otevri);
   });
 
+</script>
+<script>
+// Kontakt: formulář „Napiš nám" odešle zprávu správci
+(function(){
+  var f = document.getElementById('napis-f'); if (!f) return;
+  var h = document.getElementById('n-hlaska'), b = document.getElementById('n-btn');
+  var ukaz = function(t, trida){ h.textContent = t; h.className = 'alert ' + trida; };
+  f.addEventListener('submit', async function(e){
+    e.preventDefault(); h.className = 'alert skryt';
+    var email = document.getElementById('n-email').value.trim(), zprava = document.getElementById('n-zprava').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return ukaz('Zadej platný e-mail, na který ti odpovíme.', 'chyba');
+    if (zprava.length < 5) return ukaz('Napiš nám prosím pár slov.', 'chyba');
+    b.disabled = true; b.textContent = 'Odesílám…';
+    try {
+      await OMG.api('/api/kontakt', { email: email, jmeno: document.getElementById('n-jmeno').value, zprava: zprava, web: document.getElementById('n-web').value });
+      f.querySelectorAll('.pole, #n-btn').forEach(function(x){ x.classList.add('skryt'); });
+      ukaz('Děkujeme, zpráva je u nás. Odpovíme ti na ' + email + '.', 'ok');
+    } catch (err) { ukaz(err.message, 'chyba'); b.disabled = false; b.textContent = 'Odeslat zprávu'; }
+  });
+})();
 </script>
 <script>
 // Adventní svíčky: každá se rozhoří v den, kdy se otevře její kapitola (náhled: ?svicky=2)
