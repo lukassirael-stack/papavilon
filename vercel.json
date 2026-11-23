@@ -36,6 +36,16 @@
       "source": "/zebricek",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/(lib|supabase|test)/(.*)",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/(package.json|package-lock.json|vercel.json|README.md|.env.example|.gitignore|.vercelignore)",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }

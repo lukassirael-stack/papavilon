@@ -1,0 +1,5 @@
+# na web patří jen stránky, obrázky a funkce — podklady hry a testy zůstávají v repu
+supabase
+test
+.env.example
+README.md

@@ -7,10 +7,24 @@
 import { HRA, CENA, supabase, cors, jeAdmin, siteUrl, oznacZaplaceno, emailOdkazDoHry, jeEmail, registraceOd } from '../lib/spolecne.js';
 import { seznamSkutku } from '../lib/hra.js';
 
+const POKUSY = new Map(), MAX_POKUSU = 8, OKNO_MS = 15 * 60 * 1000;
+
 export default async function handler(req, res) {
   if (cors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ chyba: 'Pouze POST.' });
-  if (!jeAdmin(req)) return res.status(401).json({ chyba: 'Neplatný klíč správy.' });
+  // ochrana proti hádání klíče: po několika chybných pokusech z jedné adresy správa na čas zamkne
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'neznama';
+  const ted = Date.now(), z = POKUSY.get(ip);
+  if (z && ted - z.od > OKNO_MS) POKUSY.delete(ip);
+  if ((POKUSY.get(ip)?.n || 0) >= MAX_POKUSU) return res.status(429).json({ chyba: 'Příliš mnoho pokusů. Zkus to prosím za čtvrt hodiny.' });
+  if (!jeAdmin(req)) {
+    if (!req.headers['x-admin-key']) return res.status(401).json({ chyba: 'Neplatný klíč správy.' });   // stránka bez přihlášení se do pokusů nepočítá
+    const p = POKUSY.get(ip) || { n: 0, od: ted }; p.n++; POKUSY.set(ip, p);
+    if (POKUSY.size > 5000) POKUSY.clear();
+    await new Promise((r) => setTimeout(r, 700));
+    return res.status(401).json({ chyba: 'Neplatný klíč správy.' });
+  }
+  POKUSY.delete(ip);
 
   const d = req.body || {};
   const sb = supabase();
