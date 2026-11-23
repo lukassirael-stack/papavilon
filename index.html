@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261123">
+<link rel="stylesheet" href="/styl.css?v=20261123b">
 </head>
 <body>
 <section class="hero" id="hero">
@@ -122,7 +122,11 @@
 <!-- ===== VELKÁ VÁNOČNÍ JÍZDA ===== -->
 <section class="sec" id="vanocni-jizda">
   <div class="adv">
-    <img class="bg" src="/img/advent-bg.webp?v=3" alt="Papavilon sedí ve sněhu u adventního věnce se čtyřmi svíčkami, v pozadí Kroměříž s vánočním stromkem" width="1672" height="941" loading="lazy">
+    <img class="bg" src="/img/advent-bg-zhasnute.webp" alt="Papavilon sedí ve sněhu u adventního věnce se čtyřmi svíčkami, v pozadí Kroměříž s vánočním stromkem" width="1672" height="941" loading="lazy">
+    <img class="plamen" data-od="2026-11-29" src="/img/advent-plamen-1.webp" style="left:24.163%;top:26.567%;width:14.593%" alt="" aria-hidden="true">
+    <img class="plamen" data-od="2026-12-06" src="/img/advent-plamen-2.webp" style="left:38.397%;top:26.567%;width:14.593%" alt="" aria-hidden="true">
+    <img class="plamen" data-od="2026-12-13" src="/img/advent-plamen-3.webp" style="left:52.691%;top:26.567%;width:14.593%" alt="" aria-hidden="true">
+    <img class="plamen" data-od="2026-12-20" src="/img/advent-plamen-4.webp" style="left:67.225%;top:26.567%;width:14.593%" alt="" aria-hidden="true">
     <div class="adv-head">
       <div class="adv-kicker">VELKÁ VÁNOČNÍ JÍZDA 2026</div>
       <svg class="adv-orn" viewBox="0 0 300 12" aria-hidden="true"><path d="M0 6H128M172 6H300" stroke="#f0c062" stroke-width="1.2"/><path d="M150 0L156 6L150 12L144 6Z" fill="#ffe08a"/><circle cx="136" cy="6" r="2" fill="#f0c062"/><circle cx="164" cy="6" r="2" fill="#f0c062"/></svg>
@@ -138,7 +142,12 @@
     <div class="adv-final"><b>24. 12. v 10:00</b> přichází velké finále.<br>Papavilon vylosuje svůj kouzelný artefakt a další vánoční dary.</div>
   </div>
   <div class="wrap advent-text">
-    <img class="adv-mobil" src="/img/advent-mobil.webp" alt="Čtyři svíčky, čtyři kapitoly: 29. 11. první kapitola, 6. 12. druhá, 13. 12. třetí, 20. 12. čtvrtá" width="959" height="1639" loading="lazy">
+    <div class="adv-mobil-box"><img class="adv-mobil" src="/img/advent-mobil-zhasnute.webp" alt="Čtyři svíčky, čtyři kapitoly: 29. 11. první kapitola, 6. 12. druhá, 13. 12. třetí, 20. 12. čtvrtá" width="959" height="1639" loading="lazy">
+    <img class="plamen" data-od="2026-11-29" src="/img/advent-mobil-plamen-1.webp" style="left:18.665%;top:31.727%;width:21.272%" alt="" aria-hidden="true">
+    <img class="plamen" data-od="2026-12-06" src="/img/advent-mobil-plamen-2.webp" style="left:59.437%;top:31.727%;width:20.647%" alt="" aria-hidden="true">
+    <img class="plamen" data-od="2026-12-13" src="/img/advent-mobil-plamen-3.webp" style="left:18.665%;top:58.755%;width:21.272%" alt="" aria-hidden="true">
+    <img class="plamen" data-od="2026-12-20" src="/img/advent-mobil-plamen-4.webp" style="left:59.437%;top:58.755%;width:21.272%" alt="" aria-hidden="true">
+    </div>
     <div class="kicker">VELKÁ VÁNOČNÍ JÍZDA 2026</div>
     <h2>Čtyři svíčky, čtyři kapitoly</h2>
     <p class="lead">Každá kapitola zůstává otevřená až do Štědrého dne, takže se můžeš přidat kdykoli a vše doženeš.</p>
@@ -226,6 +235,8 @@
 
 <footer id="kontakt">
   <p><b style="font-family:Cinzel,serif;color:#f6d27a">Outdoor Magic Games</b> · Venkovní interaktivní hry · Kroměříž</p>
+  <p style="margin-top:10px">Hry s Papavilonem pro tebe tvoří <a href="https://oaza-adamanthea.cz" target="_blank" rel="noopener"><b>Oáza Adamanthea</b></a>, Crystal &amp; Retreat centrum v Halenkovicích.</p>
+  <p style="margin-top:4px">IČO 76564410 · <a href="https://oaza-adamanthea.cz" target="_blank" rel="noopener">oaza-adamanthea.cz</a></p>
   <p style="margin-top:8px">Napiš nám: <a href="mailto:oaza.adamanthea@gmail.com">oaza.adamanthea@gmail.com</a></p>
   <div class="odkazy"><a href="/pravidla">Pravidla hry</a><a href="/tym">Můj tým</a><a href="/odkaz">Zapomenutý odkaz</a></div>
 </footer>
@@ -248,6 +259,17 @@
     OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, otevri);
   });
 
+</script>
+<script>
+// Adventní svíčky: každá se rozhoří v den, kdy se otevře její kapitola (náhled: ?svicky=2)
+(function(){
+  var n = new URLSearchParams(location.search).get('svicky');
+  document.querySelectorAll('.plamen').forEach(function(p){
+    var poradi = Array.prototype.indexOf.call(p.parentNode.querySelectorAll('.plamen'), p) + 1;
+    var hori = n !== null ? poradi <= +n : Date.now() >= new Date(p.dataset.od + 'T00:00:00+01:00').getTime();
+    if (hori) p.classList.add('hori');
+  });
+})();
 </script>
 </body>
 </html>

@@ -139,7 +139,13 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 @media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.steps{grid-template-columns:1fr}}
 
-.adv-mobil{display:block;width:min(100%,560px);height:auto;margin:0 auto 22px;border-radius:22px;box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 0 1px rgba(246,198,106,.35)}
+.adv-mobil-box{position:relative;width:min(100%,560px);margin:0 auto 22px;border-radius:22px;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.5),0 0 0 1px rgba(246,198,106,.35)}
+.adv-mobil{display:block;width:100%;height:auto}
+.plamen{position:absolute;height:auto;opacity:0;pointer-events:none;transform-origin:50% 100%;transition:opacity 1.6s ease}
+.plamen.hori{opacity:1;animation:plamen 3.2s ease-in-out infinite}
+.plamen.hori:nth-of-type(odd){animation-duration:2.7s}
+@keyframes plamen{0%,100%{opacity:1}35%{opacity:.9}55%{opacity:.97}75%{opacity:.86}}
+@media (prefers-reduced-motion:reduce){.plamen.hori{animation:none}}
 .advent-text .kicker,.advent-text h2,.advent-text .lead,.advent-text .candles{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .advent-text .final{margin-top:0}
 .candles{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:10px}
