@@ -8,12 +8,12 @@
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <meta name="theme-color" content="#0d1440">
 <title>Vstupenka — Velká Vánoční jízda 2026</title>
-<meta name="description" content="Vstupenka pro tým do Velké Vánoční jízdy 2026 v Kroměříži. Kartou nebo QR převodem, odkaz do hry přijde e-mailem.">
+<meta name="description" content="Vstupenka pro tým do Velké Vánoční jízdy 2026 v Kroměříži. Platba kartou online, odkaz do hry přijde hned e-mailem.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://papavilon.cz/vstupenka">
 <meta property="og:site_name" content="Papavilon · Outdoor Magic Games">
 <meta property="og:title" content="Vstupenka — Velká Vánoční jízda 2026">
-<meta property="og:description" content="Vstupenka pro tým až 4 hráčů za 300 Kč na celý advent, 5. a 6. hráč +80 Kč. Kartou nebo QR převodem, odkaz do hry přijde e-mailem.">
+<meta property="og:description" content="Vstupenka pro tým až 4 hráčů za 300 Kč na celý advent, 5. a 6. hráč +80 Kč. Platba kartou online, odkaz do hry přijde hned e-mailem.">
 <meta property="og:image" content="https://papavilon.cz/img/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -45,7 +45,7 @@
   <!-- formulář -->
   <section id="formular" class="skryt">
     <p class="lead">Vstupenka za <b style="color:var(--gold)">300 Kč</b> platí pro tým až 4 hráčů a všechny čtyři kapitoly. 5. a 6. hráč za 80 Kč. Po zaplacení přijde e-mail s odkazem do hry, kde tým pojmenuješ. Do cíle dojde každý tým, každý hráč dostane dárek a je ve štědrovečerním losování.</p>
-    <div id="zruseno" class="alert info skryt" style="margin-bottom:16px">Platba se nedokončila. Můžeš to zkusit znovu, nebo zvolit převod.</div>
+    <div id="zruseno" class="alert info skryt" style="margin-bottom:16px">Platba čeká na dokončení. Pokračuj prosím znovu tlačítkem níže.</div>
     <form class="card form" id="f" novalidate>
       <div class="pole">
         <label for="email">E-MAIL</label>
@@ -61,9 +61,8 @@
       </div>
       <div class="pole">
         <label>PLATBA</label>
-        <div class="volby">
-          <label class="volba"><input type="radio" name="platba" value="stripe" checked><b>Kartou online</b><span>Karta, Apple Pay, Google Pay. Odkaz do hry přijde hned po zaplacení.</span></label>
-          <label class="volba"><input type="radio" name="platba" value="prevod"><b>Převodem (QR)</b><span>Zobrazíme QR kód a údaje. Odkaz přijde po připsání platby, obvykle do 1 pracovního dne.</span></label>
+        <div class="volby" style="display:block">
+          <div class="volba" style="padding-left:16px;border-color:var(--gold);background:rgba(90,40,170,.45)"><b>Kartou online</b><span>Karta, Apple Pay, Google Pay. Odkaz do hry přijde hned po zaplacení.</span></div>
         </div>
       </div>
       <div class="pole">
@@ -84,24 +83,6 @@
     </form>
   </section>
 
-  <!-- převod: QR a údaje -->
-  <section id="prevod" class="skryt">
-    <div class="card">
-      <p class="stred" style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:.06em">Vstupenka je založená</p>
-      <p class="stred">Zaplať <b style="color:var(--gold)" id="p-castka2">300 Kč</b> převodem. Jakmile platba dorazí, přijde ti e-mail s odkazem do hry. Stejné údaje máš teď i v e-mailu.</p>
-      <img class="qr" id="qr" alt="QR platba">
-      <table class="tab">
-        <tr><td>Částka</td><td><b id="p-castka">300 Kč</b></td></tr>
-        <tr><td>Variabilní symbol</td><td><b id="p-vs"></b></td></tr>
-        <tr><td>Číslo účtu</td><td id="p-ucet"></td></tr>
-        <tr><td>IBAN</td><td id="p-iban" style="word-break:break-all"></td></tr>
-        <tr><td>Příjemce</td><td id="p-prijemce"></td></tr>
-        <tr><td>Zpráva</td><td id="p-zprava"></td></tr>
-      </table>
-      <div class="mezera"></div>
-      <p class="stred"><a class="btn sec" id="p-odkaz" href="#">Sledovat stav platby</a></p>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -137,18 +118,9 @@
     if (!f.souhlas.checked) return ukazChybu('Potvrď prosím souhlas s pravidly hry.');
     btn.disabled = true; btn.textContent = 'Chviličku…';
     try {
-      const d = await OMG.api('/api/vstupenka', { email, pocet: f.pocet.value, platba: f.platba.value, zdroj: f.zdroj.value, souhlas: true, beta });
+      const d = await OMG.api('/api/vstupenka', { email, pocet: f.pocet.value, platba: 'stripe', zdroj: f.zdroj.value, souhlas: true, beta });
       if (d.url) { location.href = d.url; return; }
-      document.getElementById('qr').src = d.qr;
-      document.getElementById('p-vs').textContent = d.vs;
-      document.getElementById('p-castka').textContent = d.castka + ' Kč'; document.getElementById('p-castka2').textContent = d.castka + ' Kč';
-      document.getElementById('p-ucet').textContent = d.ucet.ucet;
-      document.getElementById('p-iban').textContent = d.ucet.iban;
-      document.getElementById('p-prijemce').textContent = d.ucet.prijemce;
-      document.getElementById('p-zprava').textContent = d.ucet.zprava;
-      document.getElementById('p-odkaz').href = '/tym?k=' + d.token;
-      form.classList.add('skryt'); document.getElementById('prevod').classList.remove('skryt');
-      window.scrollTo(0, 0);
+      throw new Error('Platbu se teď nepodařilo spustit. Zkus to prosím za chvíli.');
     } catch (err) {
       ukazChybu(err.message);
       btn.disabled = false; btn.textContent = 'Pokračovat k platbě';

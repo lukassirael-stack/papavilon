@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     const d = req.body || {};
     const email  = String(d.email || '').trim().toLowerCase();
-    const platba = d.platba === 'prevod' ? 'prevod' : 'stripe';
+    const platba = 'stripe';   // veřejný prodej běží jen kartou online; převod zůstává pro vstupenky založené ve správě
     const pocet  = pocetHracu(d.pocet);
     const castka = cenaZa(pocet);
 
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     if (!jeEmail(email))            return res.status(400).json({ chyba: 'Zadej platný e-mail, tam ti přijde odkaz do hry.' });
     if (!d.souhlas)                 return res.status(400).json({ chyba: 'Potvrď prosím souhlas s pravidly hry.' });
 
-    if (platba === 'stripe' && !ENV.STRIPE_SECRET_KEY) return res.status(500).json({ chyba: 'Platba kartou se právě připravuje, zvol prosím převod.' });
+    if (platba === 'stripe' && !ENV.STRIPE_SECRET_KEY) return res.status(500).json({ chyba: 'Platba kartou se právě připravuje. Zkus to prosím za chvíli.' });
 
     const sb = supabase();
     const { data: tym, error } = await sb.from('omg_tymy').insert({
@@ -40,7 +40,8 @@ export default async function handler(req, res) {
     // ── Stripe Checkout ─────────────────────────────────────────────
     if (platba === 'stripe') {
       const stripe = new Stripe(ENV.STRIPE_SECRET_KEY);
-      const session = await stripe.checkout.sessions.create({
+      let session;
+      try { session = await stripe.checkout.sessions.create({
         mode: 'payment',
         locale: 'cs',
         customer_email: email,
@@ -59,7 +60,13 @@ export default async function handler(req, res) {
         payment_intent_data: { description: `Vanocni jizda VS ${tym.vs}` },
         success_url: `${site}/dekujeme?s={CHECKOUT_SESSION_ID}`,
         cancel_url:  `${site}/vstupenka?zruseno=1`,
-      });
+      }); } catch (e) {
+        // důvod se uloží k objednávce, ať je vidět ve správě
+        console.error('Stripe checkout:', e);
+        const duvod = `Stripe: ${e.type || ''} ${e.code || ''} ${String(e.message || '').replace(/[sr]k_(live|test)_\w+/g, 'klíč')}`.substring(0, 480);
+        await sb.from('omg_tymy').update({ stav: 'zruseno', poznamka: duvod }).eq('id', tym.id);
+        return res.status(502).json({ chyba: 'Platbu kartou se teď nepodařilo spustit. Zkus to prosím za chvíli.' });
+      }
       await sb.from('omg_tymy').update({ stripe_session_id: session.id }).eq('id', tym.id);
       return res.status(200).json({ uspech: true, url: session.url });
     }
