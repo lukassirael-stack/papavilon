@@ -101,6 +101,7 @@
     <svg class="orn" viewBox="0 0 180 14" aria-hidden="true"><path d="M0 7H74M106 7H180" stroke="#f0c062" stroke-width="1.2"/><path d="M90 0L97 7L90 14L83 7Z" fill="#f0c062"/></svg>
     <p class="lead">Papavilon, laskavý kouzelný dědeček s holí a lucernou, ukryl v ulicích Kroměříže čtyři adventní světla. Vezmi rodinu nebo přátele, telefon a vydej se je najít. Papavilon tě povede a každý týden otevře novou kapitolu příběhu.</p>
     <img class="ohre-papavilon" src="/img/pozy/papavilon-19-zve.webp" alt="Papavilon s rozpřaženou rukou a kouzelnou holí tě zve do hry" width="557" height="900" loading="lazy">
+    <p style="margin-top:14px"><button type="button" class="btn sec" id="pozvani" data-src="/audio/papavilon-pozvani.mp3">▶ Poslechni si Papavilonovo pozvání</button></p>
   </div>
 </section>
 
@@ -281,6 +282,17 @@
     OMG.odpocet(document.getElementById('odpocet'), OMG.REGISTRACE_OD, otevri);
   });
 
+</script>
+<script>
+// Papavilonovo pozvání: tlačítko pustí a zastaví jeho hlas
+(function(){
+  var t = document.getElementById('pozvani'); if (!t) return; var a = null;
+  var popis = function(){ t.textContent = a && !a.paused ? '❚❚ Papavilon mluví' : '▶ Poslechni si Papavilonovo pozvání'; };
+  t.addEventListener('click', function(){
+    if (!a) { a = new Audio(t.dataset.src); ['play','pause','ended'].forEach(function(u){ a.addEventListener(u, popis); }); }
+    if (a.paused) { if (a.ended) a.currentTime = 0; a.play().catch(function(){}); } else a.pause();
+  });
+})();
 </script>
 <script>
 // Kontakt: formulář „Napiš nám" odešle zprávu správci
