@@ -606,7 +606,10 @@ body.rezim-hra .taj .pis{min-width:22px;height:42px;font-size:clamp(17px,5.4vw,2
 body.rezim-hra .panel.taj{padding:16px 8px}
 
 /* písmena usazená Papavilonovou radou a karta rady u tajenky */
-body.rezim-hra .pis.usazene{border-color:#3fd07c;box-shadow:0 0 0 2px #1c8a4b,0 0 14px rgba(90,230,150,.8),inset 0 2px 0 rgba(255,255,255,.7);display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:700}
+body.rezim-hra .pis.usazene{position:relative;display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:700;box-sizing:border-box}
+body.rezim-hra .pis-rada{padding-bottom:12px}
+body.rezim-hra button.pis.namiste{position:relative}
+body.rezim-hra .pis.usazene::after,body.rezim-hra button.pis.namiste::after{content:'';position:absolute;left:3px;right:3px;bottom:-10px;height:5px;border-radius:3px;background:#2fcf78;box-shadow:0 0 8px rgba(90,230,150,.9)}
 .rada{margin-top:14px;padding-top:12px;border-top:1px solid rgba(201,150,63,.45)}
 .rada .skutek{margin-top:0}
 

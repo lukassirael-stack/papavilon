@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261117m">
+<link rel="stylesheet" href="/styl.css?v=20261123k">
 </head>
 <body class="page">
 <header class="top">
@@ -195,6 +195,7 @@
         ${vykresliAbecedu(kp)}</div>`;
     })();
 
+    if (kp) overMista(kp, true);
     document.querySelectorAll('details.jak').forEach(el => el.addEventListener('toggle', () => { jakOtevrene = el.open; }));
     document.querySelectorAll('details.abeceda').forEach(el => el.addEventListener('toggle', () => { if (el.open) abcZavrene.delete(+el.dataset.kap); else abcZavrene.add(+el.dataset.kap); }));
     document.querySelectorAll('.svicka').forEach(el => el.addEventListener('click', () => {
@@ -246,19 +247,35 @@
   }
   const slozene = (kp) => { const konce = koncSlov(kp); return dlazdiceKap(kp).map((d, i) => d.pismeno + (konce.has(i + 1) ? ' ' : '')).join('').trim(); };
 
+  // zelené podtržení: Papavilon průběžně prozrazuje, která písmena už stojí na svém místě
+  const naMiste = {}; let mistaCas = null, mistaDotaz = 0;
+  function overMista(kp, hned) {
+    const taj = kp && (kp.stanoviste || []).find(s => s.typ === 'tajenka' && s.stav === 'otevreno');
+    if (!taj) return;
+    clearTimeout(mistaCas);
+    mistaCas = setTimeout(async () => {
+      const dotaz = ++mistaDotaz, poslano = slozene(kp);
+      try {
+        const d = await OMG.api('/api/hra', { k, akce: 'tajenka_mista', stanoviste_id: taj.id, odpoved: poslano });
+        if (dotaz !== mistaDotaz || poslano !== slozene(kp)) return;
+        naMiste[kp.id] = new Set(d.mista || []); prekresliPismena(kp);
+      } catch (e) {}
+    }, hned ? 0 : 250);
+  }
   // řada dlaždic s ovládáním (je nahoře v kapitole i u tajenky)
   function jadroPismen(kp) {
     const dl = dlazdiceKap(kp), konce = koncSlov(kp);
     const volna = Math.max(0, (kp.pismen || 0) - dl.length);
     if (!dl.length && !volna) return '<div class="pis-rada"><span class="pis-prazdno">Tady se rozzáří každé písmeno, které správně zapíšete.</span></div>';
     const vyb = dl.find(d => d.klic === vybrane);
-    const kusy = dl.map(d => d.usazene ? `<span class="pis sviti usazene" aria-label="písmeno ${OMG.esc(d.pismeno)} na svém místě">${OMG.esc(d.pismeno)}</span>`
-        : `<button type="button" class="pis ${d.stav}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="písmeno ${OMG.esc(d.pismeno)}">${OMG.esc(d.pismeno)}</button>`)
+    const zel = naMiste[kp.id] || new Set();
+    const kusy = dl.map((d, i) => d.usazene ? `<span class="pis sviti usazene" aria-label="písmeno ${OMG.esc(d.pismeno)} na svém místě">${OMG.esc(d.pismeno)}</span>`
+        : `<button type="button" class="pis ${d.stav}${zel.has(i) ? ' namiste' : ''}${d.klic === vybrane ? ' vybrane' : ''}" data-pis="${d.klic}" aria-label="písmeno ${OMG.esc(d.pismeno)}${zel.has(i) ? ' na svém místě' : ''}">${OMG.esc(d.pismeno)}</button>`)
       .concat(Array.from({ length: volna }, () => '<span class="pis ceka" aria-hidden="true"></span>'));
     const pocetSlov = konce.size + 1;
     return `<div class="pis-rada">${kusy.map((k, i) => k + (konce.has(i + 1) ? '<span class="pis-mezi" aria-hidden="true"></span>' : '')).join('')}</div>
       ${dl.length > 1 ? `<div class="pis-ovl"><button type="button" class="btn sec mala" data-posun="-1" ${vyb ? '' : 'disabled'}>◀ doleva</button><button type="button" class="btn sec mala" data-posun="1" ${vyb ? '' : 'disabled'}>doprava ▶</button></div>
-      <div class="pis-pozn">${vyb ? 'Posouvej vybrané písmeno doleva nebo doprava.' : `Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš ${pocetSlov === 2 ? 'obě slova' : pocetSlov > 2 ? 'všechna slova' : 'slovo'}.`}${konce.size ? ' Malá mezera ukazuje, kde jedno slovo končí a druhé začíná.' : ''}${dl.some(d => d.usazene) ? ' Písmena se zeleným lemem usadil Papavilon, stojí správně.' : ''}</div>` : ''}`;
+      <div class="pis-pozn">${vyb ? 'Posouvej vybrané písmeno doleva nebo doprava.' : `Ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš ${pocetSlov === 2 ? 'obě slova' : pocetSlov > 2 ? 'všechna slova' : 'slovo'}.`}${konce.size ? ' Malá mezera ukazuje, kde jedno slovo končí a druhé začíná.' : ''}${dl.some(d => d.usazene) ? ' Zeleně podtržená písmena už stojí na svém místě.' : ''}</div>` : ''}`;
   }
 
   // ── návod pro tým: jak se hraje a co dělat, když se hra zasekne ──
@@ -270,7 +287,7 @@
         <li><b>Háčky a čárky doplní Papavilon.</b> Zapiš písmeno z abecedy. Když k němu patří háček nebo čárka, rozzáří se rovnou s nimi, třeba Ž nebo Á.</li>
         <li><b>Tři pokusy na každé znamení.</b> Zlaté tečky ukazují, kolik ti jich zbývá. Správné písmeno se rozzáří a přibude mezi písmena do tajenky.</li>
         <li><b>Písmeno zůstalo skryté?</b> Po třetím pokusu ho rozzáří vánoční dobrý skutek. Papavilon ti jeden vylosuje, jeden z týmu ho udělá, jednou větou ho popíšete a písmeno svítí.</li>
-        <li><b>Slož tajenku.</b> Na konci kapitoly ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova. Tajenku můžeš posílat opakovaně.</li>
+        <li><b>Slož tajenku.</b> Na konci kapitoly ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova. V každém slově stojí jedno písmeno už na svém místě, je zeleně podtržené. Stejně se zeleně podtrhne každé písmeno, které posuneš tam, kam patří. Tajenku můžeš posílat opakovaně.</li>
         <li><b>Zasekla se tajenka?</b> Po každém pokusu ti Papavilon řekne, kolik písmen už stojí na svém místě. Po třech pokusech nabídne radu za vánoční dobrý skutek a usadí ti písmena tam, kam patří.</li>
         <li><b>Hraje celý tým.</b> Malí Hledači od 4 let hledají a počítají, školáci od 6 let sčítají a násobí, čtení zadání a skládání tajenky si berou hráči od 10 let a dospělí.</li>
         <li><b>Čtyři části poselství.</b> Každá složená tajenka je jedna část Papavilonova poselství. Každou adventní neděli se otevře cesta k další.</li>
@@ -482,7 +499,8 @@
       while (kam >= 0 && kam < rada.length && rada[kam].usazene) kam += krok;
       if (odkud < 0 || kam < 0 || kam >= klice.length) return;
       [klice[odkud], klice[kam]] = [klice[kam], klice[odkud]];
-      LS(klicPoradi(kp), klice); prekresliPismena(kp);
+      if (naMiste[kp.id]) { naMiste[kp.id].delete(odkud); naMiste[kp.id].delete(kam); }
+      LS(klicPoradi(kp), klice); prekresliPismena(kp); overMista(kp);
     }
   });
   document.getElementById('kapitoly').addEventListener('keydown', (e) => {

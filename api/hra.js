@@ -40,6 +40,13 @@ export default async function handler(req, res) {
     const { data: p } = await sb.from('omg_pokrok').select('*').eq('tym_id', tym.id).eq('stanoviste_id', sid).maybeSingle();
     const ted = new Date().toISOString();
 
+    // ── skládání tajenky: která písmena už stojí na svém místě (pokus to nestojí) ──
+    if (d.akce === 'tajenka_mista') {
+      if (plne.typ !== 'tajenka' || stan.stav !== 'otevreno') return res.status(200).json({ mista: [] });
+      const cil = tajenkaInfo(plne, p).pismena, pokus = normalizuj(String(d.odpoved || '').substring(0, 200)).replace(/ /g, '').toUpperCase();
+      return res.status(200).json({ mista: [...cil].map((c, i) => (pokus[i] === c ? i : -1)).filter((i) => i >= 0) });
+    }
+
     // ── dobrý skutek: rozzáří písmeno, které po třech pokusech zůstalo skryté (jde i na dohraném světle) ──
     if (d.akce === 'skutek_vyber' || d.akce === 'skutek_hotovo') {
       if (plne.typ !== 'znameni' || stan.stav === 'zamceno') return res.status(400).json({ chyba: 'Tady se dobrý skutek nenabízí.' });
