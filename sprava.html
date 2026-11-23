@@ -202,7 +202,7 @@
     const b = e.target.closest('button[data-a]'); if (!b) return;
     const id = b.closest('.tym').dataset.id, t = data.tymy.find(x => x.id === id);
     try {
-      if (b.dataset.a === 'zaplaceno') { if (!confirm(`Označit vstupenku VS ${t.vs} (${t.email}) jako zaplacenou a poslat odkaz do hry?`)) return; await api('tymy.zaplaceno', { id }); toast('Zaplaceno, odkaz odeslán.'); }
+      if (b.dataset.a === 'zaplaceno') { if (!confirm(`Označit vstupenku VS ${t.vs} (${t.email}) jako zaplacenou a poslat odkaz do hry?`)) return; const r = await api('tymy.zaplaceno', { id }); toast(r.emailOdeslan === false ? 'Zaplaceno. E-mail s odkazem pošli tlačítkem Poslat odkaz.' : 'Zaplaceno, odkaz odeslán.'); }
       if (b.dataset.a === 'zrusit')    { if (!confirm('Zrušit tuhle nezaplacenou vstupenku?')) return; await api('tymy.zrusit', { id }); toast('Zrušeno.'); }
       if (b.dataset.a === 'odkaz')     { await api('tymy.odkaz', { id }); toast('Odkaz odeslán.'); }
       if (b.dataset.a === 'poznamka')  { const p = prompt('Poznámka k týmu:', t.poznamka || ''); if (p === null) return; await api('tymy.poznamka', { id, poznamka: p }); toast('Uloženo.'); }

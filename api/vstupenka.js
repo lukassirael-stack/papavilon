@@ -26,6 +26,8 @@ export default async function handler(req, res) {
     if (!jeEmail(email))            return res.status(400).json({ chyba: 'Zadej platný e-mail, tam ti přijde odkaz do hry.' });
     if (!d.souhlas)                 return res.status(400).json({ chyba: 'Potvrď prosím souhlas s pravidly hry.' });
 
+    if (platba === 'stripe' && !ENV.STRIPE_SECRET_KEY) return res.status(500).json({ chyba: 'Platba kartou se právě připravuje, zvol prosím převod.' });
+
     const sb = supabase();
     const { data: tym, error } = await sb.from('omg_tymy').insert({
       hra: HRA, email, castka, pocet_hracu: pocet, platba, souhlas: true,
@@ -37,7 +39,6 @@ export default async function handler(req, res) {
 
     // ── Stripe Checkout ─────────────────────────────────────────────
     if (platba === 'stripe') {
-      if (!ENV.STRIPE_SECRET_KEY) return res.status(500).json({ chyba: 'Platba kartou se právě připravuje, zvol prosím převod.' });
       const stripe = new Stripe(ENV.STRIPE_SECRET_KEY);
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',

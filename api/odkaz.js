@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     if (!jeEmail(email)) return res.status(400).json({ chyba: 'Zadej platný e-mail.' });
 
     const sb = supabase();
-    const { data: tymy } = await sb.from('omg_tymy').select('*').eq('hra', HRA).eq('stav', 'zaplaceno').ilike('email', email).limit(5);
+    const { data: tymy } = await sb.from('omg_tymy').select('*').eq('hra', HRA).eq('stav', 'zaplaceno').eq('email', email).limit(5);
     const site = siteUrl(req);
     for (const tym of tymy || []) {
       // nejvýš jednou za 5 minut na tým

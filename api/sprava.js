@@ -84,8 +84,8 @@ export default async function handler(req, res) {
 
       // ── týmy ────────────────────────────────────────────────────
       case 'tymy.zaplaceno': {
-        const { tym, novePotvrzeno } = await oznacZaplaceno({ tymId: d.id, site, zdroj: 'sprava' });
-        return res.status(200).json({ uspech: true, novePotvrzeno, stav: tym.stav });
+        const { tym, novePotvrzeno, emailOdeslan } = await oznacZaplaceno({ tymId: d.id, site, zdroj: 'sprava' });
+        return res.status(200).json({ uspech: true, novePotvrzeno, emailOdeslan: emailOdeslan !== false, stav: tym.stav });
       }
       case 'tymy.odkaz': {
         const { data: tym } = await sb.from('omg_tymy').select('*').eq('id', d.id).single();
