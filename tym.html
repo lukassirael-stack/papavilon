@@ -101,6 +101,7 @@
 (function(){
   const q = new URLSearchParams(location.search);
   let k = q.get('k') || '';
+  let hlasKap = null, hlasKapSrc = '';   // Papavilonovo slovo na úvod kapitoly
   if (!k && localStorage.getItem('omg_token')) { location.replace('/tym?k=' + localStorage.getItem('omg_token')); return; }
   const sekce = ['bez-odkazu','nacitam','chyba','ceka','registrace','hra'];
   const ukaz = (id) => { sekce.forEach(x => document.getElementById(x).classList.toggle('skryt', x !== id)); document.body.classList.toggle('rezim-hra', id === 'hra'); };
@@ -187,7 +188,7 @@
       return `<div class="kap" id="kap-${kp.id}" data-id="${kp.id}">
         <div class="kap-nazev">${OMG.esc(kp.nazev)}${kp.podtitul ? ` · ${OMG.esc(kp.podtitul)}` : ''} · ${stavText}</div>
         ${uvod ? `<div class="rec"><img class="rec-papavilon" src="/img/hra-papavilon-${Math.min(Math.max(kp.poradi || 1, 1), 4)}.webp" alt="Papavilon"><div class="svitek">${m ? `<b>${OMG.esc(m[1])}</b>${OMG.esc(m[2])}` : OMG.esc(uvod)}<svg viewBox="-12 -12 24 24" aria-hidden="true">${VLOCKA}</svg></div></div>` : ''}
-        ${kp.audio_url ? `<audio controls preload="none" src="${OMG.esc(kp.audio_url)}"></audio>` : ''}
+        ${kp.audio_url ? `<div class="rec-hlas-obal"><button type="button" class="btn sec mala rec-hlas" data-hlas="${OMG.esc(kp.audio_url)}">${hlasKap && !hlasKap.paused && hlasKapSrc === kp.audio_url ? '❚❚ Papavilon mluví' : '▶ Poslechni si Papavilona'}</button></div>` : ''}
         ${JAK_SE_HRAJE()}
         ${vykresliPismena(kp)}
         ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<div class="svetlo zamceno">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</div>'}
@@ -201,7 +202,7 @@
     document.querySelectorAll('.svicka').forEach(el => el.addEventListener('click', () => {
       const cil = h.kapitoly.find(x => x.id === +el.dataset.skok);
       if (!cil || !cil.otevrena) { el.classList.remove('ceka-se'); void el.offsetWidth; el.classList.add('ceka-se'); return; }
-      aktivni = cil.id; vybrane = null; vykresliHru();
+      aktivni = cil.id; vybrane = null; if (hlasKap) hlasKap.pause(); vykresliHru();
     }));
   }
 
@@ -506,6 +507,16 @@
     if (!e.target.closest('[data-abeceda]')) return;
     const a = document.querySelector('details.abeceda'); if (!a) return;
     a.open = true; a.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  // Papavilonovo slovo na úvod kapitoly: tlačítko u svitku pustí a zastaví jeho hlas
+  document.getElementById('kapitoly').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-hlas]'); if (!t) return;
+    const src = t.dataset.hlas, popis = () => { document.querySelectorAll('[data-hlas]').forEach(x => { x.textContent = hlasKap && !hlasKap.paused && hlasKapSrc === x.dataset.hlas ? '❚❚ Papavilon mluví' : '▶ Poslechni si Papavilona'; }); };
+    if (!hlasKap || hlasKapSrc !== src) {
+      if (hlasKap) hlasKap.pause();
+      hlasKap = new Audio(src); hlasKapSrc = src; ['play', 'pause', 'ended'].forEach(u => hlasKap.addEventListener(u, popis));
+    }
+    if (hlasKap.paused) { if (hlasKap.ended) hlasKap.currentTime = 0; hlasKap.play().catch(() => {}); } else hlasKap.pause();
   });
   // skládání tajenky: výběr dlaždice, posun doleva/doprava, doplnění písmene ze stínu
   document.getElementById('kapitoly').addEventListener('click', (e) => {
