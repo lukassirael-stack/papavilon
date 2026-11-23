@@ -56,7 +56,7 @@ cross join (values
    '{}'::text[]),
   (6, 'tajenka', 'Papavilonovo poselství', null,
    'Máte devět písmen. Posouvejte je doleva a doprava, až z nich složíte dvě slova, začátek mého poselství.',
-   'První slovo má čtyři písmena a začíná na K. Jedno písmeno si zaslouží háček.',
+   'První slovo má čtyři písmena a začíná na K. Háček už svítí na svém písmenu.',
    '[]',
    array['KDYŽ NAJDU', 'KDYŽNAJDU'])
 ) as v(poradi, typ, nazev, misto, zadani, napoveda, znameni, odpovedi)

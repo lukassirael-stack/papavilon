@@ -197,6 +197,7 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 .ozdoba{position:absolute;pointer-events:none;mix-blend-mode:lighten;height:auto}
 .ozdoba-vlevo{top:0;left:0;width:clamp(170px,30vw,580px)}
 .ozdoba-vpravo{bottom:0;right:0;width:clamp(240px,46vw,920px)}
+.ohre-papavilon{display:block;width:auto;height:clamp(230px,26vw,340px);margin:-10px auto 0;filter:drop-shadow(0 10px 22px rgba(10,4,30,.6)) drop-shadow(0 0 26px rgba(240,192,98,.22))}
 
 .adv{display:none}
 @media (min-width:821px) and (min-aspect-ratio: 4/5){

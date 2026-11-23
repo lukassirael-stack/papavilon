@@ -264,6 +264,7 @@
       <ol>
         <li><b>Najdi znamení.</b> Na každém místě čeká jeden nebo víc úkolů. Z každého ti vyjde číslo.</li>
         <li><b>Převeď číslo na písmeno.</b> Dole je Papavilonova abeceda. Najdi v ní své číslo a písmeno nad ním zapiš do políčka u úkolu.</li>
+        <li><b>Háčky a čárky doplní Papavilon.</b> Zapiš písmeno z abecedy. Když k němu patří háček nebo čárka, rozzáří se rovnou s nimi, třeba Ž nebo Á.</li>
         <li><b>Tři pokusy na každé znamení.</b> Zlaté tečky ukazují, kolik ti jich zbývá. Správné písmeno se rozzáří a přibude mezi písmena do tajenky.</li>
         <li><b>Písmeno zůstalo skryté?</b> Po třetím pokusu ho rozzáří vánoční dobrý skutek. Papavilon ti jeden vylosuje, jeden z týmu ho udělá, jednou větou ho popíšete a písmeno svítí.</li>
         <li><b>Slož tajenku.</b> Na konci kapitoly ťukni na písmeno a posouvej ho doleva nebo doprava, až složíš slova. Tajenku můžeš posílat opakovaně.</li>
@@ -321,7 +322,7 @@
   // Papavilonova abeceda: čísla a jejich písmena
   function vykresliAbecedu(kp) {
     if (!(kp.stanoviste || []).some(s => s.typ === 'znameni')) return '';
-    const sviti = new Set((kp.stanoviste || []).flatMap(s => s.znameni || []).filter(z => z.stav === 'sviti').map(z => z.pismeno));
+    const sviti = new Set((kp.stanoviste || []).flatMap(s => s.znameni || []).filter(z => z.stav === 'sviti').map(z => String(z.pismeno || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
     const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((p, i) => `<div class="${sviti.has(p) ? 'sviti' : ''}"><b>${p}</b><span>${i + 1}</span></div>`).join('');
     return `<details class="panel abeceda" data-kap="${kp.id}" ${abcZavrene.has(kp.id) ? '' : 'open'}><summary class="panel-stitek">PAPAVILONOVA ABECEDA<svg viewBox="0 0 20 12" aria-hidden="true"><path d="M2 2l8 8 8-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
         <p>Vyhledejte tu číslo, které vám u znamení vyšlo. Písmeno nad ním zapište do políčka u znamení.</p>
