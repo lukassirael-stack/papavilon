@@ -12,7 +12,7 @@ process.env.SITE_URL = 'http://localhost:3999';
 process.env.SUPABASE_URL = 'http://mock'; process.env.SUPABASE_SERVICE_KEY = 'mock';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.json': 'application/json', '.mp3': 'audio/mpeg' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.json': 'application/json', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4' };
 
 // seed: 4 kapitoly (1. otevřená), světla 1. kapitoly jako v supabase/002_znameni.sql
 const d = (s) => new Date(s).toISOString();

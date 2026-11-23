@@ -206,6 +206,8 @@ h1{font-family:'Cinzel',serif;font-weight:700;line-height:.98;letter-spacing:.01
 .pozvani-blok{display:flex;flex-direction:column;align-items:center;gap:10px;margin:-10px 0 26px}
 .pozvani{position:relative;display:flex;align-items:center;gap:16px;text-align:left;width:min(100%,400px);padding:14px 20px 14px 14px;border-radius:999px;
   background:linear-gradient(180deg,rgba(84,44,160,.72),rgba(40,20,96,.82));border:1.5px solid rgba(246,198,106,.7);box-shadow:0 10px 30px rgba(8,4,30,.5),0 0 26px rgba(240,192,98,.18),inset 0 1px 0 rgba(255,255,255,.14)}
+.pozvani-video{display:block;width:min(100%,330px);height:auto;aspect-ratio:656/720;border-radius:24px;cursor:pointer;background:#1a1450;border:1.5px solid rgba(246,198,106,.7);box-shadow:0 14px 40px rgba(8,4,30,.55),0 0 30px rgba(240,192,98,.2)}
+@media (min-width:760px){.pozvani-video{width:auto;height:clamp(320px,34vw,430px)}}
 .pozvani-play{flex:0 0 auto;width:62px;height:62px;border-radius:50%;border:2px solid #fff3c4;cursor:pointer;color:#3a2408;display:grid;place-items:center;
   background:radial-gradient(circle at 35% 30%,#fff3b8 0%,#ffd24a 45%,#f0a40c 100%);box-shadow:0 0 0 0 rgba(255,205,90,.55),0 6px 16px rgba(10,4,30,.5);animation:pozvani-tep 2.4s ease-out infinite;transition:transform .15s ease}
 .pozvani-play:hover{transform:scale(1.06)}

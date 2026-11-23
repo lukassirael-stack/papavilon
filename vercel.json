@@ -4,7 +4,7 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/(img|audio)/(.*)",
+      "source": "/(img|audio|video)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
-<link rel="stylesheet" href="/styl.css?v=20261123d">
+<link rel="stylesheet" href="/styl.css?v=20261123e">
 </head>
 <body>
 <section class="hero" id="hero">
@@ -101,7 +101,7 @@
     <svg class="orn" viewBox="0 0 180 14" aria-hidden="true"><path d="M0 7H74M106 7H180" stroke="#f0c062" stroke-width="1.2"/><path d="M90 0L97 7L90 14L83 7Z" fill="#f0c062"/></svg>
     <p class="lead">Papavilon, laskavý kouzelný dědeček s holí a lucernou, ukryl v ulicích Kroměříže čtyři adventní světla. Vezmi rodinu nebo přátele, telefon a vydej se je najít. Papavilon tě povede a každý týden otevře novou kapitolu příběhu.</p>
     <div class="pozvani-blok">
-      <img class="ohre-papavilon" src="/img/pozy/papavilon-19-zve.webp" alt="Papavilon s rozpřaženou rukou a kouzelnou holí tě zve do hry" width="557" height="900" loading="lazy">
+      <video class="pozvani-video" id="pozvani-video" src="/video/papavilon-pozvani.mp4" poster="/img/papavilon-pozvani-poster.webp" width="656" height="720" preload="none" playsinline aria-label="Papavilon tě zve do hry"></video>
       <div class="pozvani" id="pozvani" data-src="/audio/papavilon-pozvani.mp3?v=2">
         <button type="button" class="pozvani-play" aria-label="Přehrát Papavilonovo pozvání">
           <svg class="ik-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
@@ -109,7 +109,7 @@
         </button>
         <div class="pozvani-text">
           <b>Papavilonovo pozvání</b>
-          <span class="pozvani-stav">Poslechni si, co tě o adventu čeká</span>
+          <span class="pozvani-stav">Podívej se, co tě o adventu čeká</span>
           <div class="pozvani-cara" aria-hidden="true"><i></i></div>
         </div>
       </div>
@@ -300,17 +300,18 @@
 (function(){
   var box = document.getElementById('pozvani'); if (!box) return;
   var t = box.querySelector('.pozvani-play'), stav = box.querySelector('.pozvani-stav'), cara = box.querySelector('.pozvani-cara i'), a = null;
+  var video = document.getElementById('pozvani-video'); if (video) video.addEventListener('click', function(){ t.click(); });
   var cas = function(s){ s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
   var prekresli = function(){
     var hraje = a && !a.paused;
     box.classList.toggle('hraje', !!hraje);
     t.setAttribute('aria-label', hraje ? 'Zastavit Papavilonovo pozvání' : 'Přehrát Papavilonovo pozvání');
     var d = a && isFinite(a.duration) && a.duration > 0 ? a.duration : 0;
-    if (a) { cara.style.width = (d ? a.currentTime / d * 100 : 0) + '%'; stav.textContent = hraje || a.currentTime > 0 ? cas(a.currentTime) + (d ? ' / ' + cas(d) : '') : 'Poslechni si, co tě o adventu čeká'; }
-    if (a && a.ended) { cara.style.width = '0%'; stav.textContent = 'Poslechni si ho znovu'; }
+    if (a) { cara.style.width = (d ? a.currentTime / d * 100 : 0) + '%'; stav.textContent = hraje || a.currentTime > 0 ? cas(a.currentTime) + (d ? ' / ' + cas(d) : '') : 'Podívej se, co tě o adventu čeká'; }
+    if (a && a.ended) { cara.style.width = '0%'; stav.textContent = 'Pusť si ho znovu'; }
   };
   t.addEventListener('click', function(){
-    if (!a) { a = new Audio(box.dataset.src); ['play','pause','ended','timeupdate','loadedmetadata'].forEach(function(u){ a.addEventListener(u, prekresli); }); }
+    if (!a) { a = video || new Audio(box.dataset.src); ['play','pause','ended','timeupdate','loadedmetadata'].forEach(function(u){ a.addEventListener(u, prekresli); }); }
     if (a.paused) { if (a.ended) a.currentTime = 0; a.play().catch(function(){}); } else a.pause();
   });
 })();
