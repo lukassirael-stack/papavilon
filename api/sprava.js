@@ -5,7 +5,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { HRA, CENA, supabase, cors, jeAdmin, siteUrl, oznacZaplaceno, emailOdkazDoHry, jeEmail, registraceOd } from '../lib/spolecne.js';
-import { seznamSkutku } from '../lib/hra.js';
+import { seznamSkutku, PREDPREMIERA_MAX } from '../lib/hra.js';
 
 const POKUSY = new Map(), MAX_POKUSU = 8, OKNO_MS = 15 * 60 * 1000;
 
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       // ── přehled: čísla, týmy, obsah ─────────────────────────────
       case 'prehled': {
         const [{ data: tymy }, { data: kapitoly }, { data: stanoviste }] = await Promise.all([
-          sb.from('omg_tymy').select('id, vs, email, platba, stav, castka, zaplaceno_at, nazev_tymu, pocet_hracu, vek_hracu, hraci, body, registrovano_at, created_at, poznamka, zdroj, odkaz_odeslan_at, token')
+          sb.from('omg_tymy').select('id, vs, email, platba, stav, castka, zaplaceno_at, nazev_tymu, pocet_hracu, vek_hracu, hraci, body, registrovano_at, created_at, poznamka, zdroj, odkaz_odeslan_at, token, predpremiera')
             .eq('hra', HRA).order('created_at', { ascending: false }).limit(1000),
           sb.from('omg_kapitoly').select('*').eq('hra', HRA).order('poradi'),
           sb.from('omg_stanoviste').select('*').order('kapitola_id').order('poradi'),
@@ -52,6 +52,7 @@ export default async function handler(req, res) {
             registrovano: t.filter((x) => x.stav === 'zaplaceno' && x.nazev_tymu).length,
             trzba: t.filter((x) => x.stav === 'zaplaceno').reduce((s, x) => s + (x.castka || 0), 0),
           },
+          predpremiera: { pocet: t.filter((x) => x.predpremiera).length, max: PREDPREMIERA_MAX },
           tymy: t, kapitoly: kapitoly || [], stanoviste: stanoviste || [], skutky: await seznamSkutku(),
         });
       }
@@ -147,6 +148,19 @@ export default async function handler(req, res) {
       case 'tymy.poznamka': {
         await sb.from('omg_tymy').update({ poznamka: String(d.poznamka || '').substring(0, 500) || null }).eq('id', d.id);
         return res.status(200).json({ uspech: true });
+      }
+      case 'tymy.predpremiera': {
+        // první svíčka se týmu otevře hned (předpremiéra pro vybrané týmy)
+        const zapnout = d.zapnout !== false;
+        const { data: tym } = await sb.from('omg_tymy').select('id, stav, predpremiera').eq('id', d.id).single();
+        if (!tym || tym.stav !== 'zaplaceno') return res.status(400).json({ chyba: 'Předpremiéra patří zaplaceným týmům.' });
+        if (zapnout && !tym.predpremiera) {
+          const { count } = await sb.from('omg_tymy').select('id', { count: 'exact', head: true }).eq('hra', HRA).eq('predpremiera', true);
+          if ((count || 0) >= PREDPREMIERA_MAX) return res.status(400).json({ chyba: `Předpremiéra je plná, hraje v ní ${PREDPREMIERA_MAX} týmů.` });
+        }
+        const { error } = await sb.from('omg_tymy').update({ predpremiera: zapnout }).eq('id', d.id);
+        if (error) return res.status(400).json({ chyba: error.message });
+        return res.status(200).json({ uspech: true, predpremiera: zapnout });
       }
       case 'tymy.zrusit': {
         await sb.from('omg_tymy').update({ stav: 'zruseno' }).eq('id', d.id).eq('stav', 'ceka_platbu');

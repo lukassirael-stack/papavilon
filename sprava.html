@@ -200,13 +200,13 @@
     $('#tymy').innerHTML = seznam.length ? seznam.map(t => `
       <div class="tym" data-id="${t.id}">
         <div>
-          <div class="hl">${t.nazev_tymu ? `<b>${OMG.esc(t.nazev_tymu)}</b> · ` : ''}${OMG.esc(t.email)} <span class="st ${t.stav === 'zaplaceno' ? 'zap' : (t.stav === 'zruseno' ? 'zrus' : 'ceka')}">${t.stav === 'zaplaceno' ? 'zaplaceno' : (t.stav === 'zruseno' ? 'zrušeno' : 'čeká na platbu')}</span></div>
+          <div class="hl">${t.nazev_tymu ? `<b>${OMG.esc(t.nazev_tymu)}</b> · ` : ''}${OMG.esc(t.email)} <span class="st ${t.stav === 'zaplaceno' ? 'zap' : (t.stav === 'zruseno' ? 'zrus' : 'ceka')}">${t.stav === 'zaplaceno' ? 'zaplaceno' : (t.stav === 'zruseno' ? 'zrušeno' : 'čeká na platbu')}</span>${t.predpremiera ? ' <span class="st zap">✦ předpremiéra</span>' : ''}</div>
           <div class="det">VS ${t.vs} · ${t.platba === 'stripe' ? 'karta' : 'převod'} · ${t.castka} Kč · založeno ${fmt(t.created_at)}${t.zaplaceno_at ? ` · zaplaceno ${fmt(t.zaplaceno_at)}` : ''}
             ${t.nazev_tymu ? `<br>${(t.hraci && t.hraci.length) ? t.hraci.map(h => `${OMG.esc(h.jmeno)} (${h.vek})${h.krystal ? ` 💎${OMG.esc(h.krystal)}` : ''}`).join(', ') : OMG.esc(t.vek_hracu || '')}` : ''}${t.pocet_hracu ? ` · vstupenka pro ${t.pocet_hracu}` : ''}${t.zdroj ? ` · zdroj: ${OMG.esc(t.zdroj)}` : ''}${t.poznamka ? `<br>✎ ${OMG.esc(t.poznamka)}` : ''}</div>
         </div>
         <div class="akce">
           ${t.stav === 'ceka_platbu' ? `<button class="hlavni" data-a="zaplaceno">Označit zaplaceno</button><button data-a="zrusit">Zrušit</button>` : ''}
-          ${t.stav === 'zaplaceno' ? `<button data-a="odkaz">Poslat odkaz</button><a href="/tym?k=${t.token}" target="_blank">Otevřít tým</a>` : ''}
+          ${t.stav === 'zaplaceno' ? `<button data-a="odkaz">Poslat odkaz</button><a href="/tym?k=${t.token}" target="_blank">Otevřít tým</a><button data-a="predpremiera">${t.predpremiera ? 'Ukončit předpremiéru' : `Předpremiéra (${(data.predpremiera || {}).pocet || 0}/${(data.predpremiera || {}).max || 10})`}</button>` : ''}
           <button data-a="poznamka">Poznámka</button>
         </div>
       </div>`).join('') : '<p class="stred" style="color:#cdbfa6">Nic tu zatím není.</p>';
@@ -218,6 +218,7 @@
       if (b.dataset.a === 'zaplaceno') { if (!confirm(`Označit vstupenku VS ${t.vs} (${t.email}) jako zaplacenou a poslat odkaz do hry?`)) return; const r = await api('tymy.zaplaceno', { id }); toast(r.emailOdeslan === false ? 'Zaplaceno. E-mail s odkazem pošli tlačítkem Poslat odkaz.' : 'Zaplaceno, odkaz odeslán.'); }
       if (b.dataset.a === 'zrusit')    { if (!confirm('Zrušit tuhle nezaplacenou vstupenku?')) return; await api('tymy.zrusit', { id }); toast('Zrušeno.'); }
       if (b.dataset.a === 'odkaz')     { await api('tymy.odkaz', { id }); toast('Odkaz odeslán.'); }
+      if (b.dataset.a === 'predpremiera') { const zap = !t.predpremiera; if (zap && !confirm(`Otevřít týmu ${t.nazev_tymu || t.email} první svíčku hned?`)) return; await api('tymy.predpremiera', { id, zapnout: zap }); toast(zap ? 'Předpremiéra zapnuta, první svíčka je týmu otevřená.' : 'Předpremiéra ukončena.'); }
       if (b.dataset.a === 'poznamka')  { const p = prompt('Poznámka k týmu:', t.poznamka || ''); if (p === null) return; await api('tymy.poznamka', { id, poznamka: p }); toast('Uloženo.'); }
       await nacti();
     } catch (err) { alert(err.message); }
