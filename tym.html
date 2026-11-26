@@ -166,6 +166,8 @@
     vykresliHru();
   }
 
+  // „v neděli 29. 11." podle data otevření kapitoly
+  const DEN_OTEVRENI = (iso) => { const d = new Date(iso); return `${['v neděli', 'v pondělí', 'v úterý', 've středu', 've čtvrtek', 'v pátek', 'v sobotu'][d.getDay()]} ${d.getDate()}. ${d.getMonth() + 1}.`; };
   function vykresliHru() {
     const t = stav.tym, h = stav.hra;
     document.getElementById('h-nazev').textContent = t.nazev_tymu;
@@ -191,7 +193,8 @@
         ${kp.audio_url ? `<div class="rec-hlas-obal"><button type="button" class="btn sec mala rec-hlas" data-hlas="${OMG.esc(kp.audio_url)}">${hlasKap && !hlasKap.paused && hlasKapSrc === kp.audio_url ? '❚❚ Papavilon mluví' : '▶ Poslechni si Papavilona'}</button></div>` : ''}
         ${JAK_SE_HRAJE()}
         ${vykresliPismena(kp)}
-        ${kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<div class="svetlo zamceno">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</div>'}
+        ${kp.otevrena ? '' : `<div class="svetlo zamceno tady-hrajes"><b>Tady budeš hrát.</b>${OMG.esc(kp.nazev)} se rozsvítí ${DEN_OTEVRENI(kp.otevreno_od)} Ulož si tuhle stránku do telefonu a ten den ji otevři na Velkém náměstí v Kroměříži. Papavilon tě odtud povede krok za krokem.</div>`}
+        ${!kp.otevrena ? '' : (kp.pocet ? kp.stanoviste.map(s => vykresliSvetlo(s, kp)).join('') : '<div class="svetlo zamceno">Papavilon ještě chystá světla této kapitoly. Vrať se sem brzy.</div>')}
         ${vykresliPoselstvi(kp)}
         ${vykresliAbecedu(kp)}</div>`;
     })();

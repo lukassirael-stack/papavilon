@@ -685,3 +685,6 @@ body.rezim-hra .jak:not([open]){padding:14px 16px 0;border-color:rgba(242,196,99
 body.rezim-hra .jak ol{margin:0;padding-left:22px;font-size:17px;line-height:1.4;color:#f1e6cf}
 body.rezim-hra .jak li{margin-top:9px}
 body.rezim-hra .jak li b{color:#ffe08a}
+/* stránka týmu před otevřením svíčky: „Tady budeš hrát" */
+body.rezim-hra .svetlo.zamceno.tady-hrajes{padding:18px 18px 20px;border:1.5px solid rgba(246,198,106,.75);background:rgba(30,24,84,.72);font-size:18px;line-height:1.45;box-shadow:0 0 26px rgba(246,198,106,.22)}
+.svetlo.tady-hrajes b{display:block;font-family:'Cinzel',serif;font-size:22px;letter-spacing:.06em;color:#ffe08a;margin-bottom:8px}
