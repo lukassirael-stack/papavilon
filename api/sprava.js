@@ -170,9 +170,14 @@ export default async function handler(req, res) {
         // vstupenka založená ve správě (beta rodiny, školy, dárek) — rovnou zaplacená, odkaz odejde e-mailem
         const email = String(d.email || '').trim().toLowerCase();
         if (!jeEmail(email)) return res.status(400).json({ chyba: 'Zadej platný e-mail.' });
+        const predpremiera = d.predpremiera === true;
+        if (predpremiera) {
+          const { count } = await sb.from('omg_tymy').select('id', { count: 'exact', head: true }).eq('hra', HRA).eq('predpremiera', true);
+          if ((count || 0) >= PREDPREMIERA_MAX) return res.status(400).json({ chyba: `Předpremiéra je plná, hraje v ní ${PREDPREMIERA_MAX} týmů.` });
+        }
         const { data: tym, error } = await sb.from('omg_tymy').insert({
           hra: HRA, email, castka: d.castka === 0 ? 0 : CENA, pocet_hracu: 4, platba: 'prevod', souhlas: true,
-          zdroj: 'sprava', poznamka: String(d.poznamka || 'založeno ve správě').substring(0, 500),
+          zdroj: 'sprava', poznamka: String(d.poznamka || 'založeno ve správě').substring(0, 500), predpremiera,
         }).select('*').single();
         if (error) { console.error(error); return res.status(500).json({ chyba: 'Založení se nepovedlo.' }); }
         await oznacZaplaceno({ tymId: tym.id, site, zdroj: 'sprava' });

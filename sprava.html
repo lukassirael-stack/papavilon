@@ -98,6 +98,7 @@
             <div class="pole"><label>POZNÁMKA</label><input id="v-pozn" placeholder="např. beta rodina Novákovi"></div>
           </div>
           <label class="souhlas"><input type="checkbox" id="v-zdarma"><span>Zdarma (částka 0 Kč)</span></label>
+          <label class="souhlas"><input type="checkbox" id="v-predpremiera"><span>Předpremiéra (první svíčka otevřená hned)</span></label>
           <div class="radek-btn"><button class="btn mala" type="submit">Založit a poslat odkaz</button><span id="v-vysledek" style="font-size:15px;color:#cdbfa6"></span></div>
         </form>
       </details>
@@ -226,7 +227,7 @@
   $('#f-vytvor').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
-      const d = await api('tymy.vytvor', { email: $('#v-email').value, poznamka: $('#v-pozn').value, castka: $('#v-zdarma').checked ? 0 : undefined });
+      const d = await api('tymy.vytvor', { email: $('#v-email').value, poznamka: $('#v-pozn').value, castka: $('#v-zdarma').checked ? 0 : undefined, predpremiera: $('#v-predpremiera').checked });
       $('#v-vysledek').innerHTML = `Hotovo — odkaz odeslán: <a href="${d.odkaz}" target="_blank" style="color:var(--gold)">${d.odkaz}</a>`;
       $('#v-email').value = ''; $('#v-pozn').value = ''; await nacti();
     } catch (err) { alert(err.message); }
